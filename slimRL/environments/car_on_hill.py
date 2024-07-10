@@ -14,7 +14,6 @@ class CarOnHill:
     """
 
     def __init__(self):
-
         # MDP parameters
         self.max_pos = 1.0
         self.max_velocity = 3.0
@@ -51,9 +50,7 @@ class CarOnHill:
         if self.state[0] < -self.max_pos or np.abs(self.state[1]) > self.max_velocity:
             reward = -1.0
             absorbing = True
-        elif (
-            self.state[0] > self.max_pos and np.abs(self.state[1]) <= self.max_velocity
-        ):
+        elif self.state[0] > self.max_pos and np.abs(self.state[1]) <= self.max_velocity:
             reward = 1.0
             absorbing = True
         else:
@@ -99,10 +96,8 @@ class CarOnHill:
             diff_2_hill = (-15 * position) / ((1 + 5 * position**2) ** 2.5)
 
         dp = velocity
-        ds = (
-            u
-            - self._g * self._m * diff_hill
-            - velocity**2 * self._m * diff_hill * diff_2_hill
-        ) / (self._m * (1 + diff_hill**2))
+        ds = (u - self._g * self._m * diff_hill - velocity**2 * self._m * diff_hill * diff_2_hill) / (
+            self._m * (1 + diff_hill**2)
+        )
 
         return dp, ds, 0.0
