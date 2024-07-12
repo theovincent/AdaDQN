@@ -47,5 +47,6 @@ def run(argvs=sys.argv[1:]):
         update_horizon=p["update_horizon"],
         train_frequency=p["update_to_data"],
         target_update_frequency=p["target_update_period"],
+        loss_type="huber",
     )
     train(train_key, p, agent, env, rb)

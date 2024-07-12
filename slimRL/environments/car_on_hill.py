@@ -29,7 +29,7 @@ class CarOnHill:
         self.observation_shape = (2,)
         self.n_actions = 2
 
-    def reset(self, state=None):
+    def reset(self, state=None, **kwargs):
         if state is None:
             self.state = np.array([-0.5, 0])
         else:
