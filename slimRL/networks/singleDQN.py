@@ -7,10 +7,9 @@ from slimRL.networks.architectures.DQN import DQNNet
 
 
 class SingleDQN:
-    def __init__(self, q_key: jax.random.PRNGKey, observation_dim, n_actions, hidden_layers: list, loss_type: str):
-        self.q_key = q_key
+    def __init__(self, init_key: jax.random.PRNGKey, observation_dim, n_actions, hidden_layers: list, loss_type: str):
         self.q_network = DQNNet(hidden_layers, n_actions)
-        self.params = self.q_network.init(self.q_key, jnp.zeros(observation_dim, dtype=jnp.float32))
+        self.params = self.q_network.init(init_key, jnp.zeros(observation_dim, dtype=jnp.float32))
         self.loss_type = loss_type
 
     @partial(jax.jit, static_argnames="self")

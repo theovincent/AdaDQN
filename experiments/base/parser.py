@@ -19,20 +19,11 @@ def base_parser(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
-        "-hl",
-        "--hidden_layers",
-        nargs="*",
-        help="Hidden layer sizes.",
-        required=False,
-        default=[200, 200],
-    )
-
-    parser.add_argument(
         "-rb",
         "--replay_capacity",
-        help="For DQN: Replay Buffer capacity, For FQI: Dataset size to sample.",
+        help="Replay Buffer capacity.",
         type=int,
-        default=10_000,
+        default=100_000,
     )
 
     parser.add_argument(
@@ -56,7 +47,6 @@ def base_parser(parser: argparse.ArgumentParser):
         "--gamma",
         help="Discounting factor gamma.",
         type=float,
-        required=False,
         default=0.99,
     )
 
@@ -75,30 +65,6 @@ def base_parser(parser: argparse.ArgumentParser):
         type=int,
         default=1000,
     )
-
-
-def fqi_parser(parser: argparse.ArgumentParser):
-    base_parser(parser=parser)
-    parser.add_argument(
-        "-bi",
-        "--n_bellman_iterations",
-        help="No. of Bellman iterations to perform.",
-        type=int,
-        required=False,
-        default=30,
-    )
-
-    parser.add_argument(
-        "-fs",
-        "--n_fitting_steps",
-        help="No. of gradient update steps to perform per Bellman iteration.",
-        type=int,
-        default=5,
-    )
-
-
-def dqn_parser(parser: argparse.ArgumentParser):
-    base_parser(parser=parser)
     parser.add_argument(
         "-utd",
         "--update_to_data",
@@ -144,7 +110,7 @@ def dqn_parser(parser: argparse.ArgumentParser):
         "--n_epochs",
         help="No. of epochs to train the DQN for.",
         type=int,
-        default=80,
+        default=50,
     )
 
     parser.add_argument(
@@ -152,5 +118,51 @@ def dqn_parser(parser: argparse.ArgumentParser):
         "--n_training_steps_per_epoch",
         help="Max. no. of training steps per epoch.",
         type=int,
-        default=6000,
+        default=10_000,
+    )
+
+
+def dqn_parser(parser: argparse.ArgumentParser):
+    base_parser(parser)
+    parser.add_argument(
+        "-hl",
+        "--hidden_layers",
+        nargs="*",
+        help="Hidden layer sizes.",
+        type=int,
+        default=[100, 100],
+    )
+
+
+def adadqn_parser(parser: argparse.ArgumentParser):
+    base_parser(parser)
+    parser.add_argument(
+        "-nn",
+        "--n_networks",
+        help="No. of online Q-networks.",
+        type=int,
+        default=1,
+    )
+    parser.add_argument(
+        "-nlr",
+        "--n_layers_range",
+        nargs=2,
+        help="Range of the number of layers.",
+        type=int,
+        default=[-1, -1],
+    )
+    parser.add_argument(
+        "-nnr",
+        "--n_neurons_range",
+        nargs=2,
+        help="Range of the number of neurons per layers.",
+        type=int,
+        default=[-1, -1],
+    )
+    parser.add_argument(
+        "-eoe",
+        "--end_online_exp",
+        help="End exploration espilon for sampling action.",
+        type=float,
+        default=0.01,
     )

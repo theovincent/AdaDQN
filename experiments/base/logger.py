@@ -13,20 +13,25 @@ SHARED_PARAMS = [
     "gamma",
     "lr",
     "horizon",
-    "hidden_layers",
+    "n_epochs",
+    "n_training_steps_per_epoch",
+    "update_to_data",
+    "end_epsilon",
+    "duration_epsilon",
+    "target_update_period",
+    "n_initial_samples",
 ]
 
 AGENT_PARAMS = {
     "DQN": [
-        "n_epochs",
-        "n_training_steps_per_epoch",
-        "update_to_data",
-        "end_epsilon",
-        "duration_epsilon",
-        "target_update_period",
-        "n_initial_samples",
+        "hidden_layers",
     ],
-    "FQI": ["n_bellman_iterations", "n_fitting_steps"],
+    "AdaDQN": [
+        "n_networks",
+        "n_layers_range",
+        "n_neurons_range",
+        "end_online_exp",
+    ],
 }
 
 
