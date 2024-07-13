@@ -59,5 +59,5 @@ def run(argvs=sys.argv[1:]):
     compute_target_path = os.path.join(p["save_path"], f"indexes_compute_target_{p['seed']}.json")
     draw_action_path = os.path.join(p["save_path"], f"indexes_draw_action_{p['seed']}.json")
 
-    json.dump(agent.indexes_compute_target, open(compute_target_path, "w"))
-    json.dump(agent.indexes_draw_action, open(draw_action_path, "w"))
+    json.dump(list(map(int, agent.indexes_compute_target)), open(compute_target_path, "w"))
+    json.dump(list(map(int, agent.indexes_draw_action)), open(draw_action_path, "w"))

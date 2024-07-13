@@ -36,6 +36,7 @@ class HyperparametersGenerator:
             "grad_and_loss_fn": dqn_network.value_and_grad,
             "optimizer_fn": jax.jit(optimizer.update),
             "best_action_fn": dqn_network.best_action,
+            "details": dqn_network.q_network.hidden_layers,
         }
 
         return hyperparameters_fn, dqn_network.params, optimizer_state
@@ -53,6 +54,7 @@ class HyperparametersGenerator:
             "grad_and_loss_fn": dqn_network.value_and_grad,
             "optimizer_fn": jax.jit(optimizer.update),
             "best_action_fn": dqn_network.best_action,
+            "details": dqn_network.q_network.hidden_layers,
         }
 
         return hyperparameters_fn, dqn_network.params, optimizer_state

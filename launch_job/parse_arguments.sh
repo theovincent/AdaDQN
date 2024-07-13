@@ -3,7 +3,7 @@
 function parse_arguments() {
     BASE_ARGS=""
     DQN_ARGS=""
-    FQI_ARGS=""
+    ADADQN_ARGS=""
     while [[ $# -gt 0 ]]; do
         case $1 in
             -e | --experiment_name)
@@ -20,16 +20,6 @@ function parse_arguments() {
                 LAST_SEED=$2
                 shift
                 shift
-                ;;
-            -hl | --hidden_layers)
-                shift
-                HIDDEN_LAYER=""
-                # parse all the layers till next flag encountered
-                while [[ $1 != -* && $# -gt 0 ]]; do
-                    HIDDEN_LAYER="$HIDDEN_LAYER $1"
-                    shift
-                done
-                BASE_ARGS="$BASE_ARGS -hl $HIDDEN_LAYER"
                 ;;
             -rb | --replay_capacity)
                 RB_CAPACITY=$2
@@ -67,61 +57,81 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
-            -g | --gpu)
-                GPU=true
-                shift
-                ;;
             -utd | --update_to_data)
                 UPDATE_TO_DATA=$2
-                DQN_ARGS="$DQN_ARGS -utd $UPDATE_TO_DATA"
+                BASE_ARGS="$BASE_ARGS -utd $UPDATE_TO_DATA"
                 shift
                 shift
                 ;;
             -T | --target_update_period)
                 TARGET_UPDATE_PERIOD=$2
-                DQN_ARGS="$DQN_ARGS -T $TARGET_UPDATE_PERIOD"
+                BASE_ARGS="$BASE_ARGS -T $TARGET_UPDATE_PERIOD"
                 shift
                 shift
                 ;;
             -n_init | --n_initial_samples)
                 N_INITIAL_SAMPLES=$2
-                DQN_ARGS="$DQN_ARGS -n_init $N_INITIAL_SAMPLES"
+                BASE_ARGS="$BASE_ARGS -n_init $N_INITIAL_SAMPLES"
                 shift
                 shift
                 ;;
             -eps_e | --end_epsilon)
                 END_EPSILON=$2
-                DQN_ARGS="$DQN_ARGS -eps_e $END_EPSILON"
+                BASE_ARGS="$BASE_ARGS -eps_e $END_EPSILON"
                 shift
                 shift
                 ;;
             -eps_dur | --duration_epsilon)
                 DURATION_EPSILON=$2
-                DQN_ARGS="$DQN_ARGS -eps_dur $DURATION_EPSILON"
+                BASE_ARGS="$BASE_ARGS -eps_dur $DURATION_EPSILON"
                 shift
                 shift
                 ;;
             -E | --n_epochs)
                 N_EPOCHS=$2
-                DQN_ARGS="$DQN_ARGS -E $N_EPOCHS"
+                BASE_ARGS="$BASE_ARGS -E $N_EPOCHS"
                 shift
                 shift
                 ;;
             -spe | --n_training_steps_per_epoch)
                 N_TRAINING_STEPS_PER_EPOCH=$2
-                DQN_ARGS="$DQN_ARGS -spe $N_TRAINING_STEPS_PER_EPOCH"
+                BASE_ARGS="$BASE_ARGS -spe $N_TRAINING_STEPS_PER_EPOCH"
                 shift
                 shift
                 ;;
-            -bi | --n_bellman_iterations)
-                N_BELLMAN_ITERATIONS=$2
-                FQI_ARGS="$FQI_ARGS -bi $N_BELLMAN_ITERATIONS"
+            -g | --gpu)
+                GPU=true
+                shift
+                ;;
+            -hl | --hidden_layers)
+                shift
+                HIDDEN_LAYER=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    HIDDEN_LAYER="$HIDDEN_LAYER $1"
+                    shift
+                done
+                DQN_ARGS="$DQN_ARGS -hl $HIDDEN_LAYER"
+                ;;
+            -nn | --n_networks)
+                ADADQN_ARGS="$ADADQN_ARGS -rb $2"
                 shift
                 shift
                 ;;
-            -fs | --n_fitting_steps)
-                N_FITTING_STEPS=$2
-                FQI_ARGS="$FQI_ARGS -fs $N_FITTING_STEPS"
+            -nlr | --n_layers_range)
+                ADADQN_ARGS="$ADADQN_ARGS -nlr $2 $3"
+                shift
+                shift
+                shift
+                ;;
+            -nnr | --n_neurons_range)
+                ADADQN_ARGS="$ADADQN_ARGS -nnr $2 $3"
+                shift
+                shift
+                shift
+                ;;
+            -eoe | --end_online_exp)
+                ADADQN_ARGS="$ADADQN_ARGS -rb $2"
                 shift
                 shift
                 ;;

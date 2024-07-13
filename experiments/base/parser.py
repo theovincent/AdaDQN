@@ -141,7 +141,7 @@ def adadqn_parser(parser: argparse.ArgumentParser):
         "--n_networks",
         help="No. of online Q-networks.",
         type=int,
-        default=1,
+        default=4,
     )
     parser.add_argument(
         "-nlr",

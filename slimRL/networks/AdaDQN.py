@@ -1,3 +1,4 @@
+from typing import Dict
 from typing import Tuple
 import optax
 import jax
@@ -140,3 +141,16 @@ class AdaDQN:
         )
 
         return key, selected_idx
+
+    def get_model(self) -> Dict:
+        model = {}
+
+        for idx_hp, hyperparameter in enumerate(self.hyperparameters_fn):
+            model[f"model_{idx_hp}"] = {
+                "params": self.params[idx_hp],
+                "details": hyperparameter["details"],
+            }
+
+        model["idx_compute_target"] = jnp.argmin(self.losses)
+
+        return model

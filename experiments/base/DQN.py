@@ -58,4 +58,4 @@ def train(
             f"Epoch: {idx_epoch}, Avg. return = {sum(epoch_rewards)/len(epoch_rewards)}, Num episodes = {len(epoch_rewards)}"
         )
 
-    save_logs(p, log_rewards, log_lengths, agent)
+    save_logs(p, log_rewards, log_lengths, agent.get_model())

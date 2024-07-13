@@ -1,3 +1,4 @@
+from typing import Dict
 import optax
 import jax
 from flax.core import FrozenDict
@@ -77,3 +78,9 @@ class DQN:
     @partial(jax.jit, static_argnames="self")
     def best_action(self, params: FrozenDict, state: jnp.ndarray):  # computes the best action for a single state
         return jnp.argmax(self.q.apply(params, state)).astype(jnp.int8)
+
+    def get_model(self) -> Dict:
+        return {
+            "params": self.params,
+            "hidden_layers": self.q.q_network.hidden_layers,
+        }
