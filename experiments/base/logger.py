@@ -10,25 +10,26 @@ SHARED_PARAMS = [
     "batch_size",
     "update_horizon",
     "gamma",
-    "lr",
     "horizon",
-    "n_epochs",
-    "n_training_steps_per_epoch",
     "update_to_data",
+    "target_update_frequency",
+    "n_initial_samples",
     "end_epsilon",
     "duration_epsilon",
-    "target_update_period",
-    "n_initial_samples",
+    "n_epochs",
+    "n_training_steps_per_epoch",
 ]
 
 AGENT_PARAMS = {
-    "DQN": [
-        "hidden_layers",
-    ],
+    "DQN": ["hidden_layers", "activation", "lr", "optimizer", "loss"],
     "AdaDQN": [
         "n_networks",
         "n_layers_range",
         "n_neurons_range",
+        "activations",
+        "lr_range",
+        "optimizers",
+        "losses",
         "end_online_exp",
     ],
 }

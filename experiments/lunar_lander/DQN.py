@@ -10,6 +10,8 @@ from slimRL.networks.DQN import DQN
 from experiments.base.DQN import train
 from experiments.base.logger import prepare_logs
 
+from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
+
 
 def run(argvs=sys.argv[1:]):
     print(f"---Lunar Lander__DQN__{time.strftime('%d-%m-%Y %H:%M:%S')}---")
@@ -24,6 +26,9 @@ def run(argvs=sys.argv[1:]):
         os.path.dirname(os.path.abspath(__file__)),
         f"exp_output/{p['experiment_name']}/{p['algo']}",
     )
+    assert len(p["hidden_layers"]) == len(
+        p["activation"]
+    ), f"The number of layers {len(p['hidden_layers'])} should be equal to the number of activations {len(p['activation'])}!"
     p["hidden_layers"] = [int(h) for h in p["hidden_layers"]]
 
     prepare_logs(p)
@@ -38,15 +43,17 @@ def run(argvs=sys.argv[1:]):
         gamma=p["gamma"],
     )
     agent = DQN(
-        jax.random.PRNGKey(0),
+        q_key,
         env.observation_shape[0],
         env.n_actions,
         hidden_layers=p["hidden_layers"],
+        activations=[ACTIVATIONS[key] for key in p["activation"]],
         lr=p["lr"],
+        optimizer=OPTIMIZERS[p["optimizer"]],
+        loss=LOSSES[p["loss"]],
         gamma=p["gamma"],
         update_horizon=p["update_horizon"],
-        train_frequency=p["update_to_data"],
-        target_update_frequency=p["target_update_period"],
-        loss_type="huber",
+        update_to_data=p["update_to_data"],
+        target_update_frequency=p["target_update_frequency"],
     )
     train(train_key, p, agent, env, rb)

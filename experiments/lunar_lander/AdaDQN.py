@@ -11,6 +11,8 @@ from slimRL.networks.AdaDQN import AdaDQN
 from experiments.base.DQN import train
 from experiments.base.logger import prepare_logs
 
+from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
+
 
 def run(argvs=sys.argv[1:]):
     print(f"---Lunar Lander__DQN__{time.strftime('%d-%m-%Y %H:%M:%S')}---")
@@ -44,20 +46,22 @@ def run(argvs=sys.argv[1:]):
         n_networks=p["n_networks"],
         n_layers_range=p["n_layers_range"],
         n_neurons_range=p["n_neurons_range"],
-        lr=p["lr"],
+        activations=[ACTIVATIONS[key] for key in p["activations"]],
+        lr_range=p["lr_range"],
+        optimizers=[OPTIMIZERS[key] for key in p["optimizers"]],
+        losses=[LOSSES[key] for key in p["losses"]],
         gamma=p["gamma"],
         update_horizon=p["update_horizon"],
-        train_frequency=p["update_to_data"],
-        target_update_frequency=p["target_update_period"],
-        loss_type="huber",
+        update_to_data=p["update_to_data"],
+        target_update_frequency=p["target_update_frequency"],
         end_online_exp=p["end_online_exp"],
         duration_online_exp=p["n_epochs"] * p["n_training_steps_per_epoch"],
     )
     train(train_key, p, agent, env, rb)
 
     # Save selected networks for target computation and action selection
-    compute_target_path = os.path.join(p["save_path"], f"indexes_compute_target_{p['seed']}.json")
-    draw_action_path = os.path.join(p["save_path"], f"indexes_draw_action_{p['seed']}.json")
+    compute_target_path = os.path.join(p["save_path"], f"indices_compute_target_{p['seed']}.json")
+    draw_action_path = os.path.join(p["save_path"], f"indices_draw_action_{p['seed']}.json")
 
-    json.dump(list(map(int, agent.indexes_compute_target)), open(compute_target_path, "w"))
-    json.dump(list(map(int, agent.indexes_draw_action)), open(draw_action_path, "w"))
+    json.dump(list(map(int, agent.indices_compute_target)), open(compute_target_path, "w"))
+    json.dump(list(map(int, agent.indices_draw_action)), open(draw_action_path, "w"))

@@ -16,7 +16,7 @@ def collect_single_sample(
     epsilon_schedule,
     n_training_steps: int,
 ):
-    sample_key, epsilon_key, reset_key = jax.random.split(exploration_key, 3)
+    epsilon_key, sample_key, reset_key = jax.random.split(exploration_key, 3)
 
     if jax.random.uniform(epsilon_key) < epsilon_schedule(n_training_steps):
         action = jax.random.choice(sample_key, jnp.arange(env.n_actions)).item()

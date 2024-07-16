@@ -1,4 +1,5 @@
 import argparse
+from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
 
 
 def base_parser(parser: argparse.ArgumentParser):
@@ -27,7 +28,7 @@ def base_parser(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
-        "-B",
+        "-bs",
         "--batch_size",
         help="Batch size for training.",
         type=int,
@@ -51,15 +52,7 @@ def base_parser(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
-        "-lr",
-        "--lr",
-        help="Starting learning rate for Adam optimizer.",
-        type=float,
-        default=3e-4,
-    )
-
-    parser.add_argument(
-        "-H",
+        "-hor",
         "--horizon",
         help="Horizon for truncation.",
         type=int,
@@ -74,8 +67,8 @@ def base_parser(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
-        "-T",
-        "--target_update_period",
+        "-tuf",
+        "--target_update_frequency",
         help="Update period for target Q-network.",
         type=int,
         default=200,
@@ -106,7 +99,7 @@ def base_parser(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
-        "-E",
+        "-ne",
         "--n_epochs",
         help="No. of epochs to train the DQN for.",
         type=int,
@@ -132,6 +125,38 @@ def dqn_parser(parser: argparse.ArgumentParser):
         type=int,
         default=[100, 100],
     )
+    parser.add_argument(
+        "-a",
+        "--activation",
+        nargs="*",
+        help="Activation functions.",
+        type=str,
+        choices=list(ACTIVATIONS.keys()),
+        default=["relu", "relu"],
+    )
+    parser.add_argument(
+        "-lr",
+        "--lr",
+        help="Learning rate for the optimizer.",
+        type=float,
+        default=3e-4,
+    )
+    parser.add_argument(
+        "-o",
+        "--optimizer",
+        help="Optimizer.",
+        type=str,
+        choices=list(OPTIMIZERS.keys()),
+        default="adam",
+    )
+    parser.add_argument(
+        "-l",
+        "--loss",
+        help="Loss.",
+        type=str,
+        choices=list(LOSSES.keys()),
+        default="l2",
+    )
 
 
 def adadqn_parser(parser: argparse.ArgumentParser):
@@ -149,7 +174,7 @@ def adadqn_parser(parser: argparse.ArgumentParser):
         nargs=2,
         help="Range of the number of layers.",
         type=int,
-        default=[-1, -1],
+        default=[1, 3],
     )
     parser.add_argument(
         "-nnr",
@@ -157,7 +182,42 @@ def adadqn_parser(parser: argparse.ArgumentParser):
         nargs=2,
         help="Range of the number of neurons per layers.",
         type=int,
-        default=[-1, -1],
+        default=[50, 200],
+    )
+    parser.add_argument(
+        "-as",
+        "--activations",
+        nargs="*",
+        help="Activation functions.",
+        type=str,
+        choices=list(ACTIVATIONS.keys()),
+        default=list(ACTIVATIONS.keys()),
+    )
+    parser.add_argument(
+        "-lrr",
+        "--lr_range",
+        nargs=2,
+        help="Range of the optimizer's learning rate. It is sample in log space [10^low_range, 10^high_range].",
+        type=int,
+        default=[-6, -2],
+    )
+    parser.add_argument(
+        "-os",
+        "--optimizers",
+        nargs="*",
+        help="Optimizers.",
+        type=str,
+        choices=list(OPTIMIZERS.keys()),
+        default=list(OPTIMIZERS.keys()),
+    )
+    parser.add_argument(
+        "-ls",
+        "--losses",
+        nargs="*",
+        help="Losses.",
+        type=str,
+        choices=list(LOSSES.keys()),
+        default=list(LOSSES.keys()),
     )
     parser.add_argument(
         "-eoe",

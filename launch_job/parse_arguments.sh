@@ -22,80 +22,62 @@ function parse_arguments() {
                 shift
                 ;;
             -rb | --replay_capacity)
-                RB_CAPACITY=$2
-                BASE_ARGS="$BASE_ARGS -rb $RB_CAPACITY"
+                BASE_ARGS="$BASE_ARGS -rb $2"
                 shift
                 shift
                 ;;
-            -B | --batch_size)
-                BATCH_SIZE=$2
-                BASE_ARGS="$BASE_ARGS -B $BATCH_SIZE"
+            -bs | --batch_size)
+                BASE_ARGS="$BASE_ARGS -bs $2"
                 shift
                 shift
                 ;;
             -n | --update_horizon)
-                UPDATE_HORIZON=$2
-                BASE_ARGS="$BASE_ARGS -n $UPDATE_HORIZON"
+                BASE_ARGS="$BASE_ARGS -n $2"
                 shift
                 shift
                 ;;
             -gamma | --gamma)
-                GAMMA=$2
-                BASE_ARGS="$BASE_ARGS -gamma $GAMMA"
+                BASE_ARGS="$BASE_ARGS -gamma $2"
                 shift
                 shift
                 ;;
-            -lr | --lr)
-                LEARNING_RATE=$2
-                BASE_ARGS="$BASE_ARGS -lr $LEARNING_RATE"
-                shift
-                shift
-                ;;
-            -H | --horizon)
-                HORIZON=$2
-                BASE_ARGS="$BASE_ARGS -H $HORIZON"
+            -hor | --horizon)
+                BASE_ARGS="$BASE_ARGS -hor $2"
                 shift
                 shift
                 ;;
             -utd | --update_to_data)
-                UPDATE_TO_DATA=$2
-                BASE_ARGS="$BASE_ARGS -utd $UPDATE_TO_DATA"
+                BASE_ARGS="$BASE_ARGS -utd $2"
                 shift
                 shift
                 ;;
-            -T | --target_update_period)
-                TARGET_UPDATE_PERIOD=$2
-                BASE_ARGS="$BASE_ARGS -T $TARGET_UPDATE_PERIOD"
+            -tuf | --target_update_frequency)
+                BASE_ARGS="$BASE_ARGS -tuf $2"
                 shift
                 shift
                 ;;
             -n_init | --n_initial_samples)
-                N_INITIAL_SAMPLES=$2
-                BASE_ARGS="$BASE_ARGS -n_init $N_INITIAL_SAMPLES"
+                BASE_ARGS="$BASE_ARGS -n_init $2"
                 shift
                 shift
                 ;;
             -eps_e | --end_epsilon)
-                END_EPSILON=$2
-                BASE_ARGS="$BASE_ARGS -eps_e $END_EPSILON"
+                BASE_ARGS="$BASE_ARGS -eps_e $2"
                 shift
                 shift
                 ;;
             -eps_dur | --duration_epsilon)
-                DURATION_EPSILON=$2
-                BASE_ARGS="$BASE_ARGS -eps_dur $DURATION_EPSILON"
+                BASE_ARGS="$BASE_ARGS -eps_dur $2"
                 shift
                 shift
                 ;;
-            -E | --n_epochs)
-                N_EPOCHS=$2
-                BASE_ARGS="$BASE_ARGS -E $N_EPOCHS"
+            -ne | --n_epochs)
+                BASE_ARGS="$BASE_ARGS -ne $2"
                 shift
                 shift
                 ;;
             -spe | --n_training_steps_per_epoch)
-                N_TRAINING_STEPS_PER_EPOCH=$2
-                BASE_ARGS="$BASE_ARGS -spe $N_TRAINING_STEPS_PER_EPOCH"
+                BASE_ARGS="$BASE_ARGS -spe $2"
                 shift
                 shift
                 ;;
@@ -103,6 +85,7 @@ function parse_arguments() {
                 GPU=true
                 shift
                 ;;
+            # DQN Specific
             -hl | --hidden_layers)
                 shift
                 HIDDEN_LAYER=""
@@ -113,6 +96,32 @@ function parse_arguments() {
                 done
                 DQN_ARGS="$DQN_ARGS -hl $HIDDEN_LAYER"
                 ;;
+            -a | --activation)
+                shift
+                ACTIVATION=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    ACTIVATION="$ACTIVATION $1"
+                    shift
+                done
+                DQN_ARGS="$DQN_ARGS -a $ACTIVATION"
+                ;;
+            -lr | --lr)
+                DQN_ARGS="$DQN_ARGS -lr $2"
+                shift
+                shift
+                ;;
+            -o | --optimizer)
+                DQN_ARGS="$DQN_ARGS -o $2"
+                shift
+                shift
+                ;;
+            -l | --loss)
+                DQN_ARGS="$DQN_ARGS -l $2"
+                shift
+                shift
+                ;;
+            # AdaDQN Specific
             -nn | --n_networks)
                 ADADQN_ARGS="$ADADQN_ARGS -rb $2"
                 shift
@@ -129,6 +138,42 @@ function parse_arguments() {
                 shift
                 shift
                 shift
+                ;;
+            -as | --activations)
+                shift
+                ACTIVATIONS=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    ACTIVATIONS="$ACTIVATIONS $1"
+                    shift
+                done
+                ADADQN_ARGS="$ADADQN_ARGS -as $ACTIVATIONS"
+                ;;
+            -lrr | --lr_range)
+                ADADQN_ARGS="$ADADQN_ARGS -lrr $2 $3"
+                shift
+                shift
+                shift
+                ;;
+            -os | --optimizers)
+                shift
+                OPTIMIZERS=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    OPTIMIZERS="$OPTIMIZERS $1"
+                    shift
+                done
+                ADADQN_ARGS="$ADADQN_ARGS -os $OPTIMIZERS"
+                ;;
+            -ls | --losses)
+                shift
+                LOSSES=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    LOSSES="$LOSSES $1"
+                    shift
+                done
+                ADADQN_ARGS="$ADADQN_ARGS -ls $LOSSES"
                 ;;
             -eoe | --end_online_exp)
                 ADADQN_ARGS="$ADADQN_ARGS -rb $2"
