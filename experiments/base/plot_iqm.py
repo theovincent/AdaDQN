@@ -63,7 +63,7 @@ def run(argvs=sys.argv[1:]):
         ylabel="IQM Total reward",
         x_val=np.arange(
             0,
-            env_steps,
+            env_steps + parameters[experiment]["n_training_steps_per_epoch"],
             parameters[experiment]["n_training_steps_per_epoch"],
         ).tolist(),
         y_val=returns,
