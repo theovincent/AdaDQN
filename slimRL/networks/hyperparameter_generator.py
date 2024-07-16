@@ -42,9 +42,6 @@ class HyperparametersGenerator:
             optimizer_key, hyperparameters_fn["optimizer_hps"], force_new
         )
         if change_optimizer:
-            print("New optimizer ", end="")
-            print(jax.tree_map(lambda obj: obj.item(), hyperparameters_fn["optimizer_hps"]))
-
             optimizer = self.optimizers[hyperparameters_fn["optimizer_hps"]["idx_optimizer"]](
                 hyperparameters_fn["optimizer_hps"]["learning_rate"]
             )
@@ -75,14 +72,11 @@ class HyperparametersGenerator:
                 hyperparameters_fn["best_action_fn"] = q.best_action
                 params = q.q_network.init(init_key, jnp.zeros(self.observation_dim, dtype=jnp.float32))
 
-                print("New architecture ", end="")
-                print(jax.tree_map(lambda obj: obj.item(), hyperparameters_fn["architecture_hps"]))
-
             optimizer_state = optimizer.init(params)
+        else:
+            change_architecture = False
 
-            print(end="\n\n")
-
-        return hyperparameters_fn, params, optimizer_state
+        return hyperparameters_fn, params, optimizer_state, change_optimizer, change_architecture
 
     @partial(jax.jit, static_argnames="self")
     def change_optimizer_hps(self, key, optimizer_hps, force_new):

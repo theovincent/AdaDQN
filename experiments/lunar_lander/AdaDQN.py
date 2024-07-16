@@ -61,7 +61,11 @@ def run(argvs=sys.argv[1:]):
 
     # Save selected networks for target computation and action selection
     compute_target_path = os.path.join(p["save_path"], f"indices_compute_target_{p['seed']}.json")
+    kicked_out_path = os.path.join(p["save_path"], f"indices_kicked_out_{p['seed']}.json")
     draw_action_path = os.path.join(p["save_path"], f"indices_draw_action_{p['seed']}.json")
+    hyperparameters_details_path = os.path.join(p["save_path"], f"hyperparameters_details_{p['seed']}.json")
 
-    json.dump(list(map(int, agent.indices_compute_target)), open(compute_target_path, "w"))
-    json.dump(list(map(int, agent.indices_draw_action)), open(draw_action_path, "w"))
+    json.dump(jax.tree_map(int, agent.indices_compute_target), open(compute_target_path, "w"))
+    json.dump(jax.tree_map(int, agent.indices_kicked_out), open(kicked_out_path, "w"))
+    json.dump(jax.tree_map(int, agent.indices_draw_action), open(draw_action_path, "w"))
+    json.dump(agent.hyperparameters_details, open(hyperparameters_details_path, "w"))

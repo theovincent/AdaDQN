@@ -103,7 +103,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_epochs",
         help="No. of epochs to train the DQN for.",
         type=int,
-        default=50,
+        default=100,
     )
 
     parser.add_argument(

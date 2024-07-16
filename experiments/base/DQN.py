@@ -46,9 +46,9 @@ def train(
             n_training_steps += 1
 
         print(
-            f"Epoch: {idx_epoch}"
+            f"\nEpoch: {idx_epoch}"
             + f" Avg. return = {sum(episode_returns_per_epoch[idx_epoch])/len(episode_lengths_per_epoch[idx_epoch])}"
-            + f" Num episodes = {len(episode_lengths_per_epoch[idx_epoch])}",
+            + f" Num episodes = {len(episode_lengths_per_epoch[idx_epoch])} \n",
             flush=True,
         )
 

@@ -36,12 +36,13 @@ class AdaDQN:
         )
 
         self.hyperparameters_fn = []
+        self.hyperparameters_details = {"optimizer_hps": [], "architecture_hps": []}
         self.params = []
         self.optimizer_state = []
 
         for _ in range(self.n_networks):
             self.q_key, hp_key = jax.random.split(self.q_key)
-            hyperparameters_fn, params, optimizer_state = self.hyperparameters_generator(
+            hyperparameters_fn, params, optimizer_state, _, _ = self.hyperparameters_generator(
                 hp_key, self.hyperparameters_generator.dummy_hyperparameters_fn, None, None, force_new=True
             )
 
@@ -49,9 +50,17 @@ class AdaDQN:
             self.params.append(params)
             self.optimizer_state.append(optimizer_state)
 
+            slim_optimizer_hps = jax.tree_map(lambda obj: obj.item(), hyperparameters_fn["optimizer_hps"])
+            self.hyperparameters_details["optimizer_hps"].append([slim_optimizer_hps])
+            print(f"Starting optimizer: {slim_optimizer_hps}", flush=True)
+            slim_architecture_hps = jax.tree_map(lambda obj: obj.item(), hyperparameters_fn["architecture_hps"])
+            self.hyperparameters_details["architecture_hps"].append([slim_architecture_hps])
+            print(f"and architecture: {slim_architecture_hps}", end="\n\n", flush=True)
+
         self.target_params = self.params[0].copy()
         self.idx_compute_target = 0
         self.indices_compute_target = []
+        self.indices_kicked_out = {"optimizer_hps": [], "architecture_hps": []}
         self.losses = np.zeros(n_networks)
 
         self.epsilon_b_schedule = optax.linear_schedule(1.0, end_online_exp, duration_online_exp)
@@ -88,6 +97,8 @@ class AdaDQN:
                 self.hyperparameters_fn[idx_new_hyperparameter],
                 self.params[idx_new_hyperparameter],
                 self.optimizer_state[idx_new_hyperparameter],
+                change_optimizer,
+                change_architecture,
             ) = self.hyperparameters_generator(
                 hp_key,
                 self.hyperparameters_fn[idx_new_hyperparameter],
@@ -96,8 +107,32 @@ class AdaDQN:
                 force_new=False,
             )
 
+            if change_optimizer:
+                slim_optimizer_hps = jax.tree_map(
+                    lambda obj: obj.item(), self.hyperparameters_fn[idx_new_hyperparameter]["optimizer_hps"]
+                )
+                self.hyperparameters_details["optimizer_hps"][idx_new_hyperparameter].append(slim_optimizer_hps)
+                print(
+                    f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][idx_new_hyperparameter][-2]} for {slim_optimizer_hps}",
+                    flush=True,
+                )
+
+                if change_architecture:
+                    slim_architecture_hps = jax.tree_map(
+                        lambda obj: obj.item(), self.hyperparameters_fn[idx_new_hyperparameter]["architecture_hps"]
+                    )
+                    self.hyperparameters_details["architecture_hps"][idx_new_hyperparameter].append(
+                        slim_architecture_hps
+                    )
+                    print(
+                        f"and change architecture: {self.hyperparameters_details['architecture_hps'][idx_new_hyperparameter][-2]} for {slim_architecture_hps}",
+                        flush=True,
+                    )
+
             # Reset the loss
             self.indices_compute_target.append(self.idx_compute_target)
+            self.indices_kicked_out["optimizer_hps"].append(idx_new_hyperparameter if change_optimizer else -1)
+            self.indices_kicked_out["architecture_hps"].append(idx_new_hyperparameter if change_architecture else -1)
             self.indices_draw_action.append(self.idx_draw_action)
             self.losses = np.zeros_like(self.losses)
 
