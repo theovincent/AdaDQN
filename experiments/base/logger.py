@@ -1,7 +1,7 @@
 import os
 import json
 import pickle
-import jax
+import time
 
 SHARED_PARAMS = [
     "experiment_name",
@@ -51,20 +51,29 @@ def check_experiment(p: dict):
     )
 
     if os.path.exists(params_path):
-        params = json.load(open(params_path, "r"))
-        for param in SHARED_PARAMS:
-            assert (
-                params[param] == p[param]
-            ), "Same experiment has been run with different shared parameters. Change the experiment name."
-        if f"---- {p['algo']} ---" in params.keys():
-            for param in AGENT_PARAMS[p["algo"]]:
+        # when many seed are launched at the same time, the params exist but they are still being dumped
+        try:
+            params = json.load(open(params_path, "r"))
+            for param in SHARED_PARAMS:
                 assert (
                     params[param] == p[param]
-                ), f"Same experiment has been run with different {p['algo']} parameters. Change the experiment name."
+                ), "Same experiment has been run with different shared parameters. Change the experiment name."
+            if f"---- {p['algo']} ---" in params.keys():
+                for param in AGENT_PARAMS[p["algo"]]:
+                    assert (
+                        params[param] == p[param]
+                    ), f"Same experiment has been run with different {p['algo']} parameters. Change the experiment name."
+        except json.decoder.JSONDecodeError:
+            pass
     else:
-        assert not os.path.exists(
-            os.path.join(p["save_path"], "..")
-        ), "There is a folder with this experiment name and no parameters.json. Delete the folder and restart, or change the experiment name."
+        # if the folder exists for a long time then raise an error
+        if (
+            os.path.exists(os.path.join(p["save_path"], ".."))
+            and (time.time() - os.path.getmtime(os.path.join(p["save_path"], ".."))) > 4
+        ):
+            assert (
+                True
+            ), "There is a folder with this experiment name and no parameters.json. Delete the folder and restart, or change the experiment name."
 
 
 def store_params(p: dict):
@@ -75,8 +84,14 @@ def store_params(p: dict):
     )
 
     if os.path.exists(params_path):
-        params = json.load(open(params_path, "r"))
-
+        # when many seed are launched at the same time, the params exist but they are still being dumped
+        loaded = False
+        while not loaded:
+            try:
+                params = json.load(open(params_path, "r"))
+                loaded = True
+            except json.decoder.JSONDecodeError:
+                pass
     else:
         params = {}
 
@@ -102,9 +117,7 @@ def store_params(p: dict):
     # sort keys in uniform order and store
     params = {key: params[key] for key in params_order}
 
-    with open(params_path.replace(".json", ".tmp"), "w") as f:
-        json.dump(params, f, indent=4)
-    os.rename(params_path.replace(".json", ".tmp"), params_path)
+    json.dump(params, open(params_path, "w"), indent=4)
 
 
 def prepare_logs(p: dict):
@@ -126,6 +139,6 @@ def save_logs(p: dict, log_rewards: list, log_lengths: list, model):
     lengths_path = os.path.join(p["save_path"], f"lengths_seed_{p['seed']}.json")
     model_path = os.path.join(p["save_path"], f"model_seed_{p['seed']}")
 
-    json.dump(log_rewards, open(rewards_path, "w"))
-    json.dump(log_lengths, open(lengths_path, "w"))
+    json.dump(log_rewards, open(rewards_path, "w"), indent=4)
+    json.dump(log_lengths, open(lengths_path, "w"), indent=4)
     pickle_dump(model, model_path)

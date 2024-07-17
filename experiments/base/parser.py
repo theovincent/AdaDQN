@@ -24,7 +24,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--replay_capacity",
         help="Replay Buffer capacity.",
         type=int,
-        default=100_000,
+        default=200_000,
     )
 
     parser.add_argument(
@@ -71,7 +71,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--target_update_frequency",
         help="Update period for target Q-network.",
         type=int,
-        default=200,
+        default=500,
     )
 
     parser.add_argument(
@@ -103,7 +103,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_epochs",
         help="No. of epochs to train the DQN for.",
         type=int,
-        default=100,
+        default=50,
     )
 
     parser.add_argument(
