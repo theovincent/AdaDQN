@@ -75,7 +75,7 @@ class RSDQN:
                 self.hyperparameters_fn,
                 self.params,
                 self.optimizer_state,
-                force_new=True,
+                force_new=False,
             )
 
             if change_optimizer:
