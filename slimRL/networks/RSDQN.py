@@ -63,8 +63,6 @@ class RSDQN:
 
     def update_target_params(self, step: int):
         if step % self.target_update_frequency == 0:
-            self.target_params = self.params.copy()
-
             self.q_key, hp_key = jax.random.split(self.q_key)
             (
                 self.hyperparameters_fn,
@@ -77,7 +75,7 @@ class RSDQN:
                 self.hyperparameters_fn,
                 self.params,
                 self.optimizer_state,
-                force_new=False,
+                force_new=True,
             )
 
             if change_optimizer:
@@ -95,8 +93,10 @@ class RSDQN:
                     self.hyperparameters_details["architecture_hps"].append(slim_architecture_hps)
                     print(
                         f"and change architecture: {self.hyperparameters_details['architecture_hps'][-2]} for {slim_architecture_hps}",
-                        flush=True,
+                        flush=False,
                     )
+
+            self.target_params = self.params.copy()
 
     def learn_on_batch(self, batch_samples):
         value_next_states = self.hyperparameters_fn["apply_fn"](self.target_params, batch_samples["next_observations"])
