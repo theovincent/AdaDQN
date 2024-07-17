@@ -159,15 +159,7 @@ def dqn_parser(parser: argparse.ArgumentParser):
     )
 
 
-def adadqn_parser(parser: argparse.ArgumentParser):
-    base_parser(parser)
-    parser.add_argument(
-        "-nn",
-        "--n_networks",
-        help="No. of online Q-networks.",
-        type=int,
-        default=4,
-    )
+def hyperparameter_search_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
         "-nlr",
         "--n_layers_range",
@@ -219,6 +211,18 @@ def adadqn_parser(parser: argparse.ArgumentParser):
         choices=list(LOSSES.keys()),
         default=list(LOSSES.keys()),
     )
+
+
+def adadqn_parser(parser: argparse.ArgumentParser):
+    base_parser(parser)
+    hyperparameter_search_parser(parser)
+    parser.add_argument(
+        "-nn",
+        "--n_networks",
+        help="No. of online Q-networks.",
+        type=int,
+        default=4,
+    )
     parser.add_argument(
         "-eoe",
         "--end_online_exp",
@@ -226,3 +230,8 @@ def adadqn_parser(parser: argparse.ArgumentParser):
         type=float,
         default=0.01,
     )
+
+
+def rsdqn_parser(parser: argparse.ArgumentParser):
+    base_parser(parser)
+    hyperparameter_search_parser(parser)

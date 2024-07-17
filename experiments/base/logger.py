@@ -32,6 +32,7 @@ AGENT_PARAMS = {
         "losses",
         "end_online_exp",
     ],
+    "RSDQN": ["n_layers_range", "n_neurons_range", "activations", "lr_range", "optimizers", "losses"],
 }
 
 
