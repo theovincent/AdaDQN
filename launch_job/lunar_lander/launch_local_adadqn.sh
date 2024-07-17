@@ -21,6 +21,6 @@ echo "launch train adadqn local"
 for (( seed=$FIRST_SEED; seed<=$LAST_SEED; seed++ ))
 do
     tmux send-keys -t slimRL\
-    "lunar_lander_adadqn -e $EXPERIMENT_NAME -s $seed $BASE_ARGS $ADADQN_ARGS >> experiments/lunar_lander/logs/$EXPERIMENT_NAME/AdaDQN/seed_$seed.out 2>&1 &" ENTER
+    "lunar_lander_adadqn -e $EXPERIMENT_NAME -s $seed $BASE_ARGS $HP_SEARCH_ARGS $ADADQN_ARGS >> experiments/lunar_lander/logs/$EXPERIMENT_NAME/AdaDQN/seed_$seed.out 2>&1 &" ENTER
 done
 tmux send-keys -t slimRL "wait" ENTER

@@ -3,6 +3,7 @@
 function parse_arguments() {
     BASE_ARGS=""
     DQN_ARGS=""
+    HP_SEARCH_ARGS=""
     ADADQN_ARGS=""
     while [[ $# -gt 0 ]]; do
         case $1 in
@@ -121,20 +122,15 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
-            # AdaDQN Specific
-            -nn | --n_networks)
-                ADADQN_ARGS="$ADADQN_ARGS -rb $2"
-                shift
-                shift
-                ;;
+            # Hyperparameter search Specific
             -nlr | --n_layers_range)
-                ADADQN_ARGS="$ADADQN_ARGS -nlr $2 $3"
+                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -nlr $2 $3"
                 shift
                 shift
                 shift
                 ;;
             -nnr | --n_neurons_range)
-                ADADQN_ARGS="$ADADQN_ARGS -nnr $2 $3"
+                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -nnr $2 $3"
                 shift
                 shift
                 shift
@@ -147,10 +143,10 @@ function parse_arguments() {
                     ACTIVATIONS="$ACTIVATIONS $1"
                     shift
                 done
-                ADADQN_ARGS="$ADADQN_ARGS -as $ACTIVATIONS"
+                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -as $ACTIVATIONS"
                 ;;
             -lrr | --lr_range)
-                ADADQN_ARGS="$ADADQN_ARGS -lrr $2 $3"
+                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -lrr $2 $3"
                 shift
                 shift
                 shift
@@ -163,7 +159,7 @@ function parse_arguments() {
                     OPTIMIZERS="$OPTIMIZERS $1"
                     shift
                 done
-                ADADQN_ARGS="$ADADQN_ARGS -os $OPTIMIZERS"
+                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -os $OPTIMIZERS"
                 ;;
             -ls | --losses)
                 shift
@@ -173,7 +169,13 @@ function parse_arguments() {
                     LOSSES="$LOSSES $1"
                     shift
                 done
-                ADADQN_ARGS="$ADADQN_ARGS -ls $LOSSES"
+                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -ls $LOSSES"
+                ;;
+            # AdaDQN Specific
+            -nn | --n_networks)
+                ADADQN_ARGS="$ADADQN_ARGS -rb $2"
+                shift
+                shift
                 ;;
             -eoe | --end_online_exp)
                 ADADQN_ARGS="$ADADQN_ARGS -rb $2"
