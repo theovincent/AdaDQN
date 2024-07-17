@@ -195,6 +195,6 @@ class AdaDQN:
                 "architecture_hps": hyperparameter["architecture_hps"],
             }
 
-        model["idx_compute_target"] = jnp.argmin(self.losses)
+        model["idx_compute_target"] = jnp.nanargmin(self.losses)
 
         return model
