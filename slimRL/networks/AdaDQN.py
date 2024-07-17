@@ -85,26 +85,27 @@ class AdaDQN:
 
     def update_target_params(self, step: int):
         if step % self.target_update_frequency == 0:
-            # Define new target
-            self.idx_compute_target = jnp.argmin(self.losses)
+            # Define new target | ignore the nans, if all nans take the last network (idx_compute_target = -1)
+            self.idx_compute_target = jnp.nanargmin(self.losses)
             self.target_params = self.params[self.idx_compute_target].copy()
 
-            # Change worst online network
+            # Change worst online network | take nans in priority, if all nans take the first network (idx_new_hyperparameter = 0)
             idx_new_hyperparameter = jnp.argmax(self.losses)
 
             self.q_key, hp_key = jax.random.split(self.q_key)
-            hyperparameters_fn, params, optimizer_state, change_optimizer, change_architecture = (
-                self.hyperparameters_generator(
-                    hp_key,
-                    self.hyperparameters_fn[idx_new_hyperparameter],
-                    self.params[idx_new_hyperparameter],
-                    self.optimizer_state[idx_new_hyperparameter],
-                    force_new=False,
-                )
+            (
+                self.hyperparameters_fn[idx_new_hyperparameter],
+                self.params[idx_new_hyperparameter],
+                self.optimizer_state[idx_new_hyperparameter],
+                change_optimizer,
+                change_architecture,
+            ) = self.hyperparameters_generator(
+                hp_key,
+                self.hyperparameters_fn[idx_new_hyperparameter],
+                self.params[idx_new_hyperparameter],
+                self.optimizer_state[idx_new_hyperparameter],
+                force_new=False,
             )
-            self.hyperparameters_fn[idx_new_hyperparameter] = hyperparameters_fn.copy()
-            self.params[idx_new_hyperparameter] = params
-            self.optimizer_state[idx_new_hyperparameter] = optimizer_state
 
             if change_optimizer:
                 slim_optimizer_hps = jax.tree_map(
