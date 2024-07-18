@@ -7,7 +7,7 @@ from slimRL.environments.lunar_lander import LunarLander
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 from slimRL.networks.adadqn import AdaDQN
 from experiments.base.dqn import train
-from experiments.base.logger import prepare_logs
+from experiments.base.utils import prepare_logs
 
 from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
 

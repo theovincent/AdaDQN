@@ -201,7 +201,7 @@ def adadqn_parser(env_name: str, argvs):
     p["algo"] = algo_name
     p["save_path"] = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}/seed_{p['seed']}",
+        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}",
     )
 
     return p
@@ -228,7 +228,7 @@ def rsdqn_parser(env_name: str, argvs):
     p["algo"] = algo_name
     p["save_path"] = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
-        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}/seed_{p['seed']}",
+        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}",
     )
 
     return p

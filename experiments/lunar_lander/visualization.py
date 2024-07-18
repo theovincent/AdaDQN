@@ -1,7 +1,7 @@
 import sys
 import argparse
 import jax.numpy as jnp
-from experiments.base.logger import pickle_load
+from experiments.base.utils import pickle_load
 from slimRL.environments.lunar_lander import LunarLander
 from slimRL.networks.architectures.dqn_net import DQNNet
 

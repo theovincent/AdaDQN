@@ -106,7 +106,7 @@ class AdaDQN:
                     self.hyperparameters_fn[idx_new_hyperparameter]["optimizer_hps"]
                 )
                 print(
-                    f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][idx_new_hyperparameter][-2]} for {self.hyperparameters_fn[idx_new_hyperparameter]["optimizer_hps"]}",
+                    f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][idx_new_hyperparameter][-2]} for {self.hyperparameters_fn[idx_new_hyperparameter]['optimizer_hps']}",
                     flush=True,
                 )
 
@@ -115,7 +115,7 @@ class AdaDQN:
                         self.hyperparameters_fn[idx_new_hyperparameter]["architecture_hps"]
                     )
                     print(
-                        f"and change architecture: {self.hyperparameters_details['architecture_hps'][idx_new_hyperparameter][-2]} for {self.hyperparameters_fn[idx_new_hyperparameter]["architecture_hps"]}",
+                        f"and change architecture: {self.hyperparameters_details['architecture_hps'][idx_new_hyperparameter][-2]} for {self.hyperparameters_fn[idx_new_hyperparameter]['architecture_hps']}",
                         flush=True,
                     )
 

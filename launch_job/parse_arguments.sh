@@ -6,8 +6,6 @@ function parse_arguments() {
     ALGO_NAME=${splitted_file_name[-1]::-3}
     ENV_NAME=$(basename $(dirname ${0}))
 
-    [ -d experiments/$ENV_NAME/logs/$EXPERIMENT_NAME/$ALGO_NAME ] || mkdir -p experiments/$ENV_NAME/logs/$EXPERIMENT_NAME/$ALGO_NAME
-
     ARGS=""
     
     while [[ $# -gt 0 ]]; do
@@ -182,4 +180,6 @@ function parse_arguments() {
     then
         GPU=false
     fi
+
+    [ -d experiments/$ENV_NAME/logs/$EXPERIMENT_NAME/$ALGO_NAME ] || mkdir -p experiments/$ENV_NAME/logs/$EXPERIMENT_NAME/$ALGO_NAME
 }

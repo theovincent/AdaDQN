@@ -121,11 +121,14 @@ def prepare_logs(p: dict):
     store_params(p)
 
 
-def save_logs(p: dict, log_rewards: list, log_lengths: list, model):
-    rewards_path = os.path.join(p["save_path"], f"rewards_seed_{p['seed']}.json")
-    lengths_path = os.path.join(p["save_path"], f"lengths_seed_{p['seed']}.json")
+def save_data(p: dict, episode_returns: list, episode_lengths: list, model):
+    os.makedirs(os.path.join(p["save_path"], "episode_returns_and_lenghts"), exist_ok=True)
+    episode_returns_and_lenghts_path = os.path.join(p["save_path"], "episode_returns_and_lenghts", f"{p['seed']}.json")
     model_path = os.path.join(p["save_path"], f"model_seed_{p['seed']}")
 
-    json.dump(log_rewards, open(rewards_path, "w"), indent=4)
-    json.dump(log_lengths, open(lengths_path, "w"), indent=4)
+    json.dump(
+        {"episode_returns": episode_returns, "episode_lengths": episode_lengths},
+        open(episode_returns_and_lenghts_path, "w"),
+        indent=4,
+    )
     pickle.dump(model, open(model_path, "wb"))

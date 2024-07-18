@@ -46,6 +46,11 @@ class HyperparametersGenerator:
             )
             hyperparameters_fn["optimizer_fn"] = jax.jit(optimizer.update)
 
+            # Clean optimizer_hps
+            hyperparameters_fn["optimizer_hps"] = jax.tree_map(
+                lambda obj: obj.item(), hyperparameters_fn["optimizer_hps"]
+            )
+
             # We change the architecture only if we change the optimizer
             change_architecture, n_layers, idx_loss = self.change_architecture_hps(architecture_key, force_new)
 
@@ -71,15 +76,14 @@ class HyperparametersGenerator:
                 hyperparameters_fn["best_action_fn"] = q.best_action
                 params = q.q_network.init(init_key, jnp.zeros(self.observation_dim, dtype=jnp.float32))
 
+                # Clean architecture_hps
+                hyperparameters_fn["architecture_hps"] = jax.tree_map(
+                    lambda obj: obj.item(), hyperparameters_fn["architecture_hps"]
+                )
+
             optimizer_state = optimizer.init(params)
         else:
             change_architecture = False
-
-        # Clean optimizer_hps and architecture_hps
-        hyperparameters_fn["optimizer_hps"] = jax.tree_map(lambda obj: obj.item(), hyperparameters_fn["optimizer_hps"])
-        hyperparameters_fn["architecture_hps"] = jax.tree_map(
-            lambda obj: obj.item(), hyperparameters_fn["architecture_hps"]
-        )
 
         return hyperparameters_fn, params, optimizer_state, change_optimizer, change_architecture
 

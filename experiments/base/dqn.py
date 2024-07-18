@@ -3,7 +3,7 @@ import jax
 import optax
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 from slimRL.sample_collection.utils import collect_single_sample
-from experiments.base.logger import save_logs
+from experiments.base.utils import save_data
 
 
 def train(
@@ -55,4 +55,4 @@ def train(
             episode_returns_per_epoch.append([0])
             episode_lengths_per_epoch.append([0])
 
-    save_logs(p, episode_returns_per_epoch, episode_lengths_per_epoch, agent.get_model())
+    save_data(p, episode_returns_per_epoch, episode_lengths_per_epoch, agent.get_model())
