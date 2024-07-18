@@ -47,9 +47,11 @@ def run(argvs=sys.argv[1:]):
     )
     train(train_key, p, agent, env, rb)
 
-    # Save selected networks for target computation and action selection
+    # Save extra data
     os.makedirs(os.path.join(p["save_path"], f"indices_and_hyperparameters_details"), exist_ok=True)
-    indices_and_details_path = os.path.join(p["save_path"], f"indices_and_hyperparameters_details/{p['seed']}.json")
+    indices_and_hyperparameters_details_path = os.path.join(
+        p["save_path"], f"indices_and_hyperparameters_details/{p['seed']}.json"
+    )
 
     json.dump(
         {
@@ -63,6 +65,6 @@ def run(argvs=sys.argv[1:]):
             ),
             "hyperparameters_details": agent.hyperparameters_details,
         },
-        open(indices_and_details_path, "w"),
+        open(indices_and_hyperparameters_details_path, "w"),
         indent=4,
     )

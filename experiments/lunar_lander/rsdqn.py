@@ -45,5 +45,8 @@ def run(argvs=sys.argv[1:]):
     )
     train(train_key, p, agent, env, rb)
 
-    hyperparameters_details_path = os.path.join(p["save_path"], f"hyperparameters_details_{p['seed']}.json")
+    # Save extra data
+    os.makedirs(os.path.join(p["save_path"], f"hyperparameters_details"), exist_ok=True)
+    hyperparameters_details_path = os.path.join(p["save_path"], f"hyperparameters_details/{p['seed']}.json")
+
     json.dump(agent.hyperparameters_details, open(hyperparameters_details_path, "w"), indent=4)
