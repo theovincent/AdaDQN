@@ -4,7 +4,7 @@ import jax
 from flax.core import FrozenDict
 from functools import partial
 import jax.numpy as jnp
-from slimRL.networks.architectures.DQN import DQNNet
+from slimRL.networks.architectures.dqn_net import DQNNet
 
 
 class SingleDQN:

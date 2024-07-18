@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, List, Callable
+from typing import Dict, List, Tuple, Callable
 import optax
 import jax
 from flax.core import FrozenDict
@@ -50,12 +50,10 @@ class AdaDQN:
             self.params.append(params)
             self.optimizer_state.append(optimizer_state)
 
-            slim_optimizer_hps = jax.tree_map(lambda obj: obj.item(), hyperparameters_fn["optimizer_hps"])
-            self.hyperparameters_details["optimizer_hps"].append([slim_optimizer_hps])
-            print(f"Starting optimizer: {slim_optimizer_hps}", flush=True)
-            slim_architecture_hps = jax.tree_map(lambda obj: obj.item(), hyperparameters_fn["architecture_hps"])
-            self.hyperparameters_details["architecture_hps"].append([slim_architecture_hps])
-            print(f"and architecture: {slim_architecture_hps}", end="\n\n", flush=True)
+            self.hyperparameters_details["optimizer_hps"].append([hyperparameters_fn["optimizer_hps"]])
+            print(f"Starting optimizer: {hyperparameters_fn['optimizer_hps']}", flush=True)
+            self.hyperparameters_details["architecture_hps"].append([hyperparameters_fn["architecture_hps"]])
+            print(f"and architecture: {hyperparameters_fn['architecture_hps']}", end="\n\n", flush=True)
 
         self.target_params = self.params[0].copy()
         self.idx_compute_target = 0
@@ -85,10 +83,6 @@ class AdaDQN:
 
     def update_target_params(self, step: int):
         if step % self.target_update_frequency == 0:
-            # Define new target | ignore the nans, if all nans take the last network (idx_compute_target = -1)
-            self.idx_compute_target = jnp.nanargmin(self.losses)
-            self.target_params = self.params[self.idx_compute_target].copy()
-
             # Change worst online network | take nans in priority, if all nans take the first network (idx_new_hyperparameter = 0)
             idx_new_hyperparameter = jnp.argmax(self.losses)
 
@@ -108,26 +102,26 @@ class AdaDQN:
             )
 
             if change_optimizer:
-                slim_optimizer_hps = jax.tree_map(
-                    lambda obj: obj.item(), self.hyperparameters_fn[idx_new_hyperparameter]["optimizer_hps"]
+                self.hyperparameters_details["optimizer_hps"][idx_new_hyperparameter].append(
+                    self.hyperparameters_fn[idx_new_hyperparameter]["optimizer_hps"]
                 )
-                self.hyperparameters_details["optimizer_hps"][idx_new_hyperparameter].append(slim_optimizer_hps)
                 print(
-                    f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][idx_new_hyperparameter][-2]} for {slim_optimizer_hps}",
+                    f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][idx_new_hyperparameter][-2]} for {self.hyperparameters_fn[idx_new_hyperparameter]["optimizer_hps"]}",
                     flush=True,
                 )
 
                 if change_architecture:
-                    slim_architecture_hps = jax.tree_map(
-                        lambda obj: obj.item(), self.hyperparameters_fn[idx_new_hyperparameter]["architecture_hps"]
-                    )
                     self.hyperparameters_details["architecture_hps"][idx_new_hyperparameter].append(
-                        slim_architecture_hps
+                        self.hyperparameters_fn[idx_new_hyperparameter]["architecture_hps"]
                     )
                     print(
-                        f"and change architecture: {self.hyperparameters_details['architecture_hps'][idx_new_hyperparameter][-2]} for {slim_architecture_hps}",
+                        f"and change architecture: {self.hyperparameters_details['architecture_hps'][idx_new_hyperparameter][-2]} for {self.hyperparameters_fn[idx_new_hyperparameter]["architecture_hps"]}",
                         flush=True,
                     )
+
+            # Define new target | ignore the nans, if all nans take the last network (idx_compute_target = -1)
+            self.idx_compute_target = jnp.nanargmin(self.losses)
+            self.target_params = self.params[self.idx_compute_target].copy()
 
             # Reset the loss
             self.indices_compute_target.append(self.idx_compute_target)

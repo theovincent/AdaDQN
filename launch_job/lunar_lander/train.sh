@@ -9,4 +9,4 @@ else
     source env_cpu/bin/activate
 fi
 
-lunar_lander_rsdqn -e $EXPERIMENT_NAME -s $SLURM_ARRAY_TASK_ID $BASE_ARGS $HP_SEARCH_ARGS
+$ENV_NAME\_$ALGO_NAME -e $EXPERIMENT_NAME -s $SLURM_ARRAY_TASK_ID $ARGS

@@ -1,4 +1,8 @@
+import os
 import argparse
+import time
+
+from experiments import DISPLAY_NAME
 from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
 
 
@@ -101,7 +105,7 @@ def base_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
         "-ne",
         "--n_epochs",
-        help="No. of epochs to train the DQN for.",
+        help="No. of epochs to train for.",
         type=int,
         default=50,
     )
@@ -112,50 +116,6 @@ def base_parser(parser: argparse.ArgumentParser):
         help="Max. no. of training steps per epoch.",
         type=int,
         default=10_000,
-    )
-
-
-def dqn_parser(parser: argparse.ArgumentParser):
-    base_parser(parser)
-    parser.add_argument(
-        "-hl",
-        "--hidden_layers",
-        nargs="*",
-        help="Hidden layer sizes.",
-        type=int,
-        default=[100, 100],
-    )
-    parser.add_argument(
-        "-a",
-        "--activation",
-        nargs="*",
-        help="Activation functions.",
-        type=str,
-        choices=list(ACTIVATIONS.keys()),
-        default=["relu", "relu"],
-    )
-    parser.add_argument(
-        "-lr",
-        "--lr",
-        help="Learning rate for the optimizer.",
-        type=float,
-        default=3e-4,
-    )
-    parser.add_argument(
-        "-o",
-        "--optimizer",
-        help="Optimizer.",
-        type=str,
-        choices=list(OPTIMIZERS.keys()),
-        default="adam",
-    )
-    parser.add_argument(
-        "-l",
-        "--loss",
-        help="Loss.",
-        type=str,
-        choices=list(LOSSES.keys()),
-        default="l2",
     )
 
 
@@ -213,7 +173,11 @@ def hyperparameter_search_parser(parser: argparse.ArgumentParser):
     )
 
 
-def adadqn_parser(parser: argparse.ArgumentParser):
+def adadqn_parser(env_name: str, argvs):
+    algo_name = "adadqn"
+    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
+
     base_parser(parser)
     hyperparameter_search_parser(parser)
     parser.add_argument(
@@ -230,8 +194,41 @@ def adadqn_parser(parser: argparse.ArgumentParser):
         type=float,
         default=0.01,
     )
+    args = parser.parse_args(argvs)
+
+    p = vars(args)
+    p["env"] = env_name
+    p["algo"] = algo_name
+    p["save_path"] = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}/seed_{p['seed']}",
+    )
+
+    return p
 
 
-def rsdqn_parser(parser: argparse.ArgumentParser):
+def rsdqn_parser(env_name: str, argvs):
+    algo_name = "rsdqn"
+    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
+
     base_parser(parser)
     hyperparameter_search_parser(parser)
+    parser.add_argument(
+        "-sphp",
+        "--n_training_step_per_hypeparameter",
+        help="No. of training steps per hyperparameter update.",
+        type=int,
+        default=100_000,
+    )
+    args = parser.parse_args(argvs)
+
+    p = vars(args)
+    p["env"] = env_name
+    p["algo"] = algo_name
+    p["save_path"] = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}/seed_{p['seed']}",
+    )
+
+    return p

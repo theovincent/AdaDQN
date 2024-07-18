@@ -18,22 +18,16 @@ SHARED_PARAMS = [
     "duration_epsilon",
     "n_epochs",
     "n_training_steps_per_epoch",
+    # Hyperparameter search
+    "n_layers_range",
+    "n_neurons_range",
+    "activations",
+    "lr_range",
+    "optimizers",
+    "losses",
 ]
 
-AGENT_PARAMS = {
-    "DQN": ["hidden_layers", "activation", "lr", "optimizer", "loss"],
-    "AdaDQN": [
-        "n_networks",
-        "n_layers_range",
-        "n_neurons_range",
-        "activations",
-        "lr_range",
-        "optimizers",
-        "losses",
-        "end_online_exp",
-    ],
-    "RSDQN": ["n_layers_range", "n_neurons_range", "activations", "lr_range", "optimizers", "losses"],
-}
+AGENT_PARAMS = {"adadqn": ["n_networks", "end_online_exp"], "rsdqn": ["n_training_step_per_hypeparameter"]}
 
 
 def check_experiment(p: dict):
@@ -73,7 +67,7 @@ def check_experiment(p: dict):
             and (time.time() - os.path.getmtime(os.path.join(p["save_path"], ".."))) > 4
         ):
             assert (
-                True
+                False
             ), "There is a folder with this experiment name and no parameters.json. Delete the folder and restart, or change the experiment name."
 
 
@@ -127,14 +121,6 @@ def prepare_logs(p: dict):
     store_params(p)
 
 
-def pickle_load(path):
-    return pickle.load(open(path, "rb"))
-
-
-def pickle_dump(obj, path):
-    return pickle.dump(obj, open(path, "wb"))
-
-
 def save_logs(p: dict, log_rewards: list, log_lengths: list, model):
     rewards_path = os.path.join(p["save_path"], f"rewards_seed_{p['seed']}.json")
     lengths_path = os.path.join(p["save_path"], f"lengths_seed_{p['seed']}.json")
@@ -142,4 +128,4 @@ def save_logs(p: dict, log_rewards: list, log_lengths: list, model):
 
     json.dump(log_rewards, open(rewards_path, "w"), indent=4)
     json.dump(log_lengths, open(lengths_path, "w"), indent=4)
-    pickle_dump(model, model_path)
+    pickle.dump(model, open(model_path, "wb"))

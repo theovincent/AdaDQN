@@ -1,9 +1,8 @@
 from typing import Tuple, List, Callable, Dict
 from functools import partial
-import optax
 import jax
 import jax.numpy as jnp
-from slimRL.networks.singleDQN import SingleDQN
+from slimRL.networks.single_dqn import SingleDQN
 
 
 class HyperparametersGenerator:
@@ -75,6 +74,12 @@ class HyperparametersGenerator:
             optimizer_state = optimizer.init(params)
         else:
             change_architecture = False
+
+        # Clean optimizer_hps and architecture_hps
+        hyperparameters_fn["optimizer_hps"] = jax.tree_map(lambda obj: obj.item(), hyperparameters_fn["optimizer_hps"])
+        hyperparameters_fn["architecture_hps"] = jax.tree_map(
+            lambda obj: obj.item(), hyperparameters_fn["architecture_hps"]
+        )
 
         return hyperparameters_fn, params, optimizer_state, change_optimizer, change_architecture
 

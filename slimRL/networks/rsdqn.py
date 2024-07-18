@@ -4,7 +4,6 @@ import jax
 from flax.core import FrozenDict
 from functools import partial
 import jax.numpy as jnp
-import numpy as np
 from slimRL.networks.hyperparameter_generator import HyperparametersGenerator
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 
@@ -25,25 +24,23 @@ class RSDQN:
         update_horizon: int,
         update_to_data: int,
         target_update_frequency: int,
+        n_training_step_per_hypeparameter: int,
     ):
-        # To make sure AdaDQN samples the same hyperparameters
-        self.q_key, _ = jax.random.split(key)
         self.hyperparameters_generator = HyperparametersGenerator(
             observation_dim, n_actions, n_layers_range, n_neurons_range, activations, lr_range, optimizers, losses
         )
 
-        self.q_key, hp_key = jax.random.split(self.q_key)
+        self.q_key, hp_key = jax.random.split(key)
         self.hyperparameters_fn, self.params, self.optimizer_state, _, _ = self.hyperparameters_generator(
             hp_key, self.hyperparameters_generator.dummy_hyperparameters_fn, None, None, force_new=True
         )
 
-        self.hyperparameters_details = {"optimizer_hps": [], "architecture_hps": []}
-        slim_optimizer_hps = jax.tree_map(lambda obj: obj.item(), self.hyperparameters_fn["optimizer_hps"])
-        self.hyperparameters_details["optimizer_hps"].append([slim_optimizer_hps])
-        print(f"Starting optimizer: {slim_optimizer_hps}", flush=True)
-        slim_architecture_hps = jax.tree_map(lambda obj: obj.item(), self.hyperparameters_fn["architecture_hps"])
-        self.hyperparameters_details["architecture_hps"].append([slim_architecture_hps])
-        print(f"and architecture: {slim_architecture_hps}", end="\n\n", flush=True)
+        self.hyperparameters_details = {
+            "optimizer_hps": [self.hyperparameters_fn["optimizer_hps"]],
+            "architecture_hps": [self.hyperparameters_fn["architecture_hps"]],
+        }
+        print(f"Starting optimizer: {self.hyperparameters_fn['optimizer_hps']}", flush=True)
+        print(f"and architecture: {self.hyperparameters_fn['architecture_hps']}", end="\n\n", flush=True)
 
         self.target_params = self.params.copy()
 
@@ -51,6 +48,7 @@ class RSDQN:
         self.update_horizon = update_horizon
         self.update_to_data = update_to_data
         self.target_update_frequency = target_update_frequency
+        self.n_training_step_per_hypeparameter = n_training_step_per_hypeparameter
 
     def update_online_params(self, step: int, key: jax.Array, batch_size: int, replay_buffer: ReplayBuffer):
         if step % self.update_to_data == 0:
@@ -62,7 +60,7 @@ class RSDQN:
         return jnp.nan
 
     def update_target_params(self, step: int):
-        if step % self.target_update_frequency == 0:
+        if step % self.n_training_step_per_hypeparameter == 0:
             self.q_key, hp_key = jax.random.split(self.q_key)
             (
                 self.hyperparameters_fn,
@@ -75,27 +73,24 @@ class RSDQN:
                 self.hyperparameters_fn,
                 self.params,
                 self.optimizer_state,
-                force_new=False,
+                force_new=True,
             )
 
             if change_optimizer:
-                slim_optimizer_hps = jax.tree_map(lambda obj: obj.item(), self.hyperparameters_fn["optimizer_hps"])
-                self.hyperparameters_details["optimizer_hps"].append(slim_optimizer_hps)
+                self.hyperparameters_details["optimizer_hps"].append(self.hyperparameters_fn["optimizer_hps"])
                 print(
-                    f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][-2]} for {slim_optimizer_hps}",
+                    f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][-2]} for {self.hyperparameters_fn['optimizer_hps']}",
                     flush=True,
                 )
 
                 if change_architecture:
-                    slim_architecture_hps = jax.tree_map(
-                        lambda obj: obj.item(), self.hyperparameters_fn["architecture_hps"]
-                    )
-                    self.hyperparameters_details["architecture_hps"].append(slim_architecture_hps)
+                    self.hyperparameters_details["architecture_hps"].append(self.hyperparameters_fn["architecture_hps"])
                     print(
-                        f"and change architecture: {self.hyperparameters_details['architecture_hps'][-2]} for {slim_architecture_hps}",
+                        f"and change architecture: {self.hyperparameters_details['architecture_hps'][-2]} for {self.hyperparameters_fn['architecture_hps']}",
                         flush=False,
                     )
 
+        if step % self.target_update_frequency == 0:
             self.target_params = self.params.copy()
 
     def learn_on_batch(self, batch_samples):

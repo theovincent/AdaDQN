@@ -1,32 +1,20 @@
 import os
 import sys
-import time
-import argparse
 import json
 import jax
 from experiments.base.parser import rsdqn_parser
 from slimRL.environments.lunar_lander import LunarLander
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
-from slimRL.networks.RSDQN import RSDQN
-from experiments.base.DQN import train
+from slimRL.networks.rsdqn import RSDQN
+from experiments.base.dqn import train
 from experiments.base.logger import prepare_logs
 
 from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
 
 
 def run(argvs=sys.argv[1:]):
-    print(f"---Lunar Lander__DQN__{time.strftime('%d-%m-%Y %H:%M:%S')}---")
-    parser = argparse.ArgumentParser("Train DQN on Lunar Lander.")
-    rsdqn_parser(parser)
-    args = parser.parse_args(argvs)
-
-    p = vars(args)
-    p["env"] = "Lunar Lander"
-    p["algo"] = "RSDQN"
-    p["save_path"] = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        f"exp_output/{p['experiment_name']}/{p['algo']}",
-    )
+    env_name = os.path.abspath(__file__).split(os.sep)[-2]
+    p = rsdqn_parser(env_name, argvs)
 
     prepare_logs(p)
 
@@ -53,6 +41,7 @@ def run(argvs=sys.argv[1:]):
         update_horizon=p["update_horizon"],
         update_to_data=p["update_to_data"],
         target_update_frequency=p["target_update_frequency"],
+        n_training_step_per_hypeparameter=p["n_training_step_per_hypeparameter"],
     )
     train(train_key, p, agent, env, rb)
 

@@ -4,7 +4,7 @@ import json
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
-from experiments.base.iqm import get_iqm_and_conf_parallel
+from experiments.base.iqm import get_iqm_and_conf_per_epoch
 
 
 def run(argvs=sys.argv[1:]):
@@ -103,7 +103,7 @@ def plot_value(xlabel, ylabel, x_val, y_val, xlim, xticks, **kwargs):
         ax.set_ylim(kwargs.get("ylim"))
 
     for exp in y_val:
-        y_iqm, y_cnf = get_iqm_and_conf_parallel(y_val[exp])
+        y_iqm, y_cnf = get_iqm_and_conf_per_epoch(y_val[exp])
         ax.plot(
             x_val,
             y_iqm,

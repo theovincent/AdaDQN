@@ -1,10 +1,15 @@
 #!/bin/bash
 
 function parse_arguments() {
-    BASE_ARGS=""
-    DQN_ARGS=""
-    HP_SEARCH_ARGS=""
-    ADADQN_ARGS=""
+    # Get ALGO_NAME from the last word of the file name
+    IFS='_' read -ra splitted_file_name <<< $(basename $0)
+    ALGO_NAME=${splitted_file_name[-1]::-3}
+    ENV_NAME=$(basename $(dirname ${0}))
+
+    [ -d experiments/$ENV_NAME/logs/$EXPERIMENT_NAME/$ALGO_NAME ] || mkdir -p experiments/$ENV_NAME/logs/$EXPERIMENT_NAME/$ALGO_NAME
+
+    ARGS=""
+    
     while [[ $# -gt 0 ]]; do
         case $1 in
             -e | --experiment_name)
@@ -23,62 +28,62 @@ function parse_arguments() {
                 shift
                 ;;
             -rb | --replay_capacity)
-                BASE_ARGS="$BASE_ARGS -rb $2"
+                ARGS="$ARGS -rb $2"
                 shift
                 shift
                 ;;
             -bs | --batch_size)
-                BASE_ARGS="$BASE_ARGS -bs $2"
+                ARGS="$ARGS -bs $2"
                 shift
                 shift
                 ;;
             -n | --update_horizon)
-                BASE_ARGS="$BASE_ARGS -n $2"
+                ARGS="$ARGS -n $2"
                 shift
                 shift
                 ;;
             -gamma | --gamma)
-                BASE_ARGS="$BASE_ARGS -gamma $2"
+                ARGS="$ARGS -gamma $2"
                 shift
                 shift
                 ;;
             -hor | --horizon)
-                BASE_ARGS="$BASE_ARGS -hor $2"
+                ARGS="$ARGS -hor $2"
                 shift
                 shift
                 ;;
             -utd | --update_to_data)
-                BASE_ARGS="$BASE_ARGS -utd $2"
+                ARGS="$ARGS -utd $2"
                 shift
                 shift
                 ;;
             -tuf | --target_update_frequency)
-                BASE_ARGS="$BASE_ARGS -tuf $2"
+                ARGS="$ARGS -tuf $2"
                 shift
                 shift
                 ;;
             -n_init | --n_initial_samples)
-                BASE_ARGS="$BASE_ARGS -n_init $2"
+                ARGS="$ARGS -n_init $2"
                 shift
                 shift
                 ;;
             -eps_e | --end_epsilon)
-                BASE_ARGS="$BASE_ARGS -eps_e $2"
+                ARGS="$ARGS -eps_e $2"
                 shift
                 shift
                 ;;
             -eps_dur | --duration_epsilon)
-                BASE_ARGS="$BASE_ARGS -eps_dur $2"
+                ARGS="$ARGS -eps_dur $2"
                 shift
                 shift
                 ;;
             -ne | --n_epochs)
-                BASE_ARGS="$BASE_ARGS -ne $2"
+                ARGS="$ARGS -ne $2"
                 shift
                 shift
                 ;;
             -spe | --n_training_steps_per_epoch)
-                BASE_ARGS="$BASE_ARGS -spe $2"
+                ARGS="$ARGS -spe $2"
                 shift
                 shift
                 ;;
@@ -86,51 +91,15 @@ function parse_arguments() {
                 GPU=true
                 shift
                 ;;
-            # DQN Specific
-            -hl | --hidden_layers)
-                shift
-                HIDDEN_LAYER=""
-                # parse all the layers till next flag encountered
-                while [[ $1 != -* && $# -gt 0 ]]; do
-                    HIDDEN_LAYER="$HIDDEN_LAYER $1"
-                    shift
-                done
-                DQN_ARGS="$DQN_ARGS -hl $HIDDEN_LAYER"
-                ;;
-            -a | --activation)
-                shift
-                ACTIVATION=""
-                # parse all the layers till next flag encountered
-                while [[ $1 != -* && $# -gt 0 ]]; do
-                    ACTIVATION="$ACTIVATION $1"
-                    shift
-                done
-                DQN_ARGS="$DQN_ARGS -a $ACTIVATION"
-                ;;
-            -lr | --lr)
-                DQN_ARGS="$DQN_ARGS -lr $2"
-                shift
-                shift
-                ;;
-            -o | --optimizer)
-                DQN_ARGS="$DQN_ARGS -o $2"
-                shift
-                shift
-                ;;
-            -l | --loss)
-                DQN_ARGS="$DQN_ARGS -l $2"
-                shift
-                shift
-                ;;
             # Hyperparameter search Specific
             -nlr | --n_layers_range)
-                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -nlr $2 $3"
+                ARGS="$ARGS -nlr $2 $3"
                 shift
                 shift
                 shift
                 ;;
             -nnr | --n_neurons_range)
-                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -nnr $2 $3"
+                ARGS="$ARGS -nnr $2 $3"
                 shift
                 shift
                 shift
@@ -143,10 +112,10 @@ function parse_arguments() {
                     ACTIVATIONS="$ACTIVATIONS $1"
                     shift
                 done
-                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -as $ACTIVATIONS"
+                ARGS="$ARGS -as $ACTIVATIONS"
                 ;;
             -lrr | --lr_range)
-                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -lrr $2 $3"
+                ARGS="$ARGS -lrr $2 $3"
                 shift
                 shift
                 shift
@@ -159,7 +128,7 @@ function parse_arguments() {
                     OPTIMIZERS="$OPTIMIZERS $1"
                     shift
                 done
-                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -os $OPTIMIZERS"
+                ARGS="$ARGS -os $OPTIMIZERS"
                 ;;
             -ls | --losses)
                 shift
@@ -169,16 +138,22 @@ function parse_arguments() {
                     LOSSES="$LOSSES $1"
                     shift
                 done
-                HP_SEARCH_ARGS="$HP_SEARCH_ARGS -ls $LOSSES"
+                ARGS="$ARGS -ls $LOSSES"
                 ;;
-            # AdaDQN Specific
+            # adadqn specific
             -nn | --n_networks)
-                ADADQN_ARGS="$ADADQN_ARGS -rb $2"
+                ARGS="$ARGS -rb $2"
                 shift
                 shift
                 ;;
             -eoe | --end_online_exp)
-                ADADQN_ARGS="$ADADQN_ARGS -rb $2"
+                ARGS="$ARGS -rb $2"
+                shift
+                shift
+                ;;
+            # rsdqn specific
+            -sphp | --n_training_step_per_hypeparameter)
+                ARGS="$ARGS -sphp $2"
                 shift
                 shift
                 ;;
