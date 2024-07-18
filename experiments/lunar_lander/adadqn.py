@@ -48,12 +48,21 @@ def run(argvs=sys.argv[1:]):
     train(train_key, p, agent, env, rb)
 
     # Save selected networks for target computation and action selection
-    compute_target_path = os.path.join(p["save_path"], f"indices_compute_target_{p['seed']}.json")
-    kicked_out_path = os.path.join(p["save_path"], f"indices_kicked_out_{p['seed']}.json")
-    draw_action_path = os.path.join(p["save_path"], f"indices_draw_action_{p['seed']}.json")
-    hyperparameters_details_path = os.path.join(p["save_path"], f"hyperparameters_details_{p['seed']}.json")
+    os.makedirs(os.path.join(p["save_path"], f"indices_and_hyperparameters_details"), exist_ok=True)
+    indices_and_details_path = os.path.join(p["save_path"], f"indices_and_hyperparameters_details/{p['seed']}.json")
 
-    json.dump(jax.tree_map(int, agent.indices_compute_target), open(compute_target_path, "w"), indent=4)
-    json.dump(jax.tree_map(int, agent.indices_kicked_out), open(kicked_out_path, "w"), indent=4)
-    json.dump(jax.tree_map(int, agent.indices_draw_action), open(draw_action_path, "w"), indent=4)
-    json.dump(agent.hyperparameters_details, open(hyperparameters_details_path, "w"), indent=4)
+    json.dump(
+        {
+            **jax.tree_map(
+                int,
+                {
+                    "compute_target": agent.indices_compute_target,
+                    "kicked_out": agent.indices_kicked_out,
+                    "draw_action": agent.indices_draw_action,
+                },
+            ),
+            "hyperparameters_details": agent.hyperparameters_details,
+        },
+        open(indices_and_details_path, "w"),
+        indent=4,
+    )

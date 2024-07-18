@@ -50,9 +50,9 @@ class AdaDQN:
             self.params.append(params)
             self.optimizer_state.append(optimizer_state)
 
-            self.hyperparameters_details["optimizer_hps"].append([hyperparameters_fn["optimizer_hps"]])
+            self.hyperparameters_details["optimizer_hps"].append([hyperparameters_fn["optimizer_hps"].copy()])
             print(f"Starting optimizer: {hyperparameters_fn['optimizer_hps']}", flush=True)
-            self.hyperparameters_details["architecture_hps"].append([hyperparameters_fn["architecture_hps"]])
+            self.hyperparameters_details["architecture_hps"].append([hyperparameters_fn["architecture_hps"].copy()])
             print(f"and architecture: {hyperparameters_fn['architecture_hps']}", end="\n\n", flush=True)
 
         self.target_params = self.params[0].copy()
@@ -103,7 +103,7 @@ class AdaDQN:
 
             if change_optimizer:
                 self.hyperparameters_details["optimizer_hps"][idx_new_hyperparameter].append(
-                    self.hyperparameters_fn[idx_new_hyperparameter]["optimizer_hps"]
+                    self.hyperparameters_fn[idx_new_hyperparameter]["optimizer_hps"].copy()
                 )
                 print(
                     f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][idx_new_hyperparameter][-2]} for {self.hyperparameters_fn[idx_new_hyperparameter]['optimizer_hps']}",
@@ -112,7 +112,7 @@ class AdaDQN:
 
                 if change_architecture:
                     self.hyperparameters_details["architecture_hps"][idx_new_hyperparameter].append(
-                        self.hyperparameters_fn[idx_new_hyperparameter]["architecture_hps"]
+                        self.hyperparameters_fn[idx_new_hyperparameter]["architecture_hps"].copy()
                     )
                     print(
                         f"and change architecture: {self.hyperparameters_details['architecture_hps'][idx_new_hyperparameter][-2]} for {self.hyperparameters_fn[idx_new_hyperparameter]['architecture_hps']}",
