@@ -16,6 +16,8 @@ class HyperparametersGenerator:
         lr_range: Tuple,
         optimizers: List[Callable],
         losses: List[Callable],
+        optimizer_change_probability: float,
+        architecture_change_probability: float,
     ) -> None:
         self.observation_dim = observation_dim
         self.n_actions = n_actions
@@ -26,6 +28,8 @@ class HyperparametersGenerator:
         self.lr_range = lr_range
         self.optimizers = optimizers
         self.losses = losses
+        self.optimizer_change_probability = optimizer_change_probability
+        self.architecture_change_probability = architecture_change_probability
 
         self.dummy_hyperparameters_fn = {
             "optimizer_hps": {"learning_rate": 0.0, "idx_optimizer": 0},
@@ -91,7 +95,9 @@ class HyperparametersGenerator:
     def change_optimizer_hps(self, key, optimizer_hps, force_new):
         change_key, generate_hp_key = jax.random.split(key)
 
-        change_optimizer = jnp.logical_or(jax.random.bernoulli(change_key, p=0.02), force_new)
+        change_optimizer = jnp.logical_or(
+            force_new, jax.random.bernoulli(change_key, p=self.optimizer_change_probability)
+        )
         optimizer_hps = jax.lax.cond(
             change_optimizer,
             self.generate_hp_optimizer,
@@ -117,7 +123,9 @@ class HyperparametersGenerator:
     def change_architecture_hps(self, key, force_new):
         change_key, generate_hp_key = jax.random.split(key)
 
-        change_architecture = jnp.logical_or(jax.random.bernoulli(change_key, p=0.7), force_new)
+        change_architecture = jnp.logical_or(
+            force_new, jax.random.bernoulli(change_key, p=self.architecture_change_probability)
+        )
         n_layers, idx_loss = jax.lax.cond(
             change_architecture, self.generate_hp_architecture, lambda key: (0, 0), generate_hp_key
         )

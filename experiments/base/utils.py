@@ -27,7 +27,10 @@ SHARED_PARAMS = [
     "losses",
 ]
 
-AGENT_PARAMS = {"adadqn": ["n_networks", "end_online_exp"], "rsdqn": ["n_training_step_per_hypeparameter"]}
+AGENT_PARAMS = {
+    "adadqn": ["n_networks", "end_online_exp", "optimizer_change_probability", "architecture_change_probability"],
+    "rsdqn": ["n_training_step_per_hypeparameter"],
+}
 
 
 def check_experiment(p: dict):
@@ -52,12 +55,12 @@ def check_experiment(p: dict):
             for param in SHARED_PARAMS:
                 assert (
                     params[param] == p[param]
-                ), "Same experiment has been run with different shared parameters. Change the experiment name."
+                ), f"The same experiment has been run with {param} = {params[param]} instead of {p[param]}. Change the experiment name."
             if f"---- {p['algo']} ---" in params.keys():
                 for param in AGENT_PARAMS[p["algo"]]:
                     assert (
                         params[param] == p[param]
-                    ), f"Same experiment has been run with different {p['algo']} parameters. Change the experiment name."
+                    ), f"The same experiment has been run with {param} = {params[param]} instead of {p[param]}. Change the experiment name."
         except json.decoder.JSONDecodeError:
             pass
     else:

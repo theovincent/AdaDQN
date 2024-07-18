@@ -28,11 +28,22 @@ class AdaDQN:
         target_update_frequency: int,
         end_online_exp: float,
         duration_online_exp: int,
+        optimizer_change_probability: float,
+        architecture_change_probability: float,
     ):
         self.q_key, self.action_key = jax.random.split(key)
         self.n_networks = n_networks
         self.hyperparameters_generator = HyperparametersGenerator(
-            observation_dim, n_actions, n_layers_range, n_neurons_range, activations, lr_range, optimizers, losses
+            observation_dim,
+            n_actions,
+            n_layers_range,
+            n_neurons_range,
+            activations,
+            lr_range,
+            optimizers,
+            losses,
+            optimizer_change_probability,
+            architecture_change_probability,
         )
 
         self.hyperparameters_fn = []

@@ -44,6 +44,8 @@ def run(argvs=sys.argv[1:]):
         target_update_frequency=p["target_update_frequency"],
         end_online_exp=p["end_online_exp"],
         duration_online_exp=p["n_epochs"] * p["n_training_steps_per_epoch"],
+        optimizer_change_probability=p["optimizer_change_probability"],
+        architecture_change_probability=p["architecture_change_probability"],
     )
     train(train_key, p, agent, env, rb)
 

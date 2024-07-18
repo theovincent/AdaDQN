@@ -140,12 +140,22 @@ function parse_arguments() {
                 ;;
             # adadqn specific
             -nn | --n_networks)
-                ARGS="$ARGS -rb $2"
+                ARGS="$ARGS -nn $2"
                 shift
                 shift
                 ;;
             -eoe | --end_online_exp)
-                ARGS="$ARGS -rb $2"
+                ARGS="$ARGS -eoe $2"
+                shift
+                shift
+                ;;
+            -ocp | --optimizer_change_probability)
+                ARGS="$ARGS -ocp $2"
+                shift
+                shift
+                ;;
+            -acp | --architecture_change_probability)
+                ARGS="$ARGS -acp $2"
                 shift
                 shift
                 ;;

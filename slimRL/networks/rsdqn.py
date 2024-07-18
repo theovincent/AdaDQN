@@ -27,7 +27,16 @@ class RSDQN:
         n_training_step_per_hypeparameter: int,
     ):
         self.hyperparameters_generator = HyperparametersGenerator(
-            observation_dim, n_actions, n_layers_range, n_neurons_range, activations, lr_range, optimizers, losses
+            observation_dim,
+            n_actions,
+            n_layers_range,
+            n_neurons_range,
+            activations,
+            lr_range,
+            optimizers,
+            losses,
+            1.0,
+            1.0,
         )
 
         self.q_key, hp_key = jax.random.split(key)

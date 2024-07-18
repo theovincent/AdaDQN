@@ -194,6 +194,20 @@ def adadqn_parser(env_name: str, argvs):
         type=float,
         default=0.01,
     )
+    parser.add_argument(
+        "-ocp",
+        "--optimizer_change_probability",
+        help="The probability of changing the optimizer.",
+        type=float,
+        default=0.02,
+    )
+    parser.add_argument(
+        "-acp",
+        "--architecture_change_probability",
+        help="The probability of changing the architecture given that the optimizer changes.",
+        type=float,
+        default=0.7,
+    )
     args = parser.parse_args(argvs)
 
     p = vars(args)
