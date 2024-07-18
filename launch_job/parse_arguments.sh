@@ -10,6 +10,16 @@ function parse_arguments() {
     
     while [[ $# -gt 0 ]]; do
         case $1 in
+            --algo_name)
+                ALGO_NAME=$2
+                shift
+                shift
+                ;;
+            --env_name)
+                ENV_NAME=$2
+                shift
+                shift
+                ;;
             -e | --experiment_name)
                 EXPERIMENT_NAME=$2
                 shift
