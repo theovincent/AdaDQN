@@ -229,11 +229,11 @@ def rsdqn_parser(env_name: str, argvs):
     base_parser(parser)
     hyperparameter_search_parser(parser)
     parser.add_argument(
-        "-sphp",
-        "--n_training_step_per_hypeparameter",
+        "-nephp",
+        "--n_epochs_per_hypeparameter",
         help="No. of training steps per hyperparameter update.",
         type=int,
-        default=100_000,
+        default=20,
     )
     args = parser.parse_args(argvs)
 

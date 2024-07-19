@@ -6,7 +6,7 @@ from experiments.base.parser import rsdqn_parser
 from slimRL.environments.lunar_lander import LunarLander
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 from slimRL.networks.rsdqn import RSDQN
-from experiments.base.dqn import train
+from experiments.base.dqn_episode import train
 from experiments.base.utils import prepare_logs
 
 from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
@@ -41,12 +41,12 @@ def run(argvs=sys.argv[1:]):
         update_horizon=p["update_horizon"],
         update_to_data=p["update_to_data"],
         target_update_frequency=p["target_update_frequency"],
-        n_training_step_per_hypeparameter=p["n_training_step_per_hypeparameter"],
+        n_epochs_per_hypeparameter=p["n_epochs_per_hypeparameter"],
     )
     train(train_key, p, agent, env, rb)
 
     # Save extra data
-    os.makedirs(os.path.join(p["save_path"], f"hyperparameters_details"), exist_ok=True)
+    os.makedirs(os.path.join(p["save_path"], "hyperparameters_details"), exist_ok=True)
     hyperparameters_details_path = os.path.join(p["save_path"], f"hyperparameters_details/{p['seed']}.json")
 
     json.dump(agent.hyperparameters_details, open(hyperparameters_details_path, "w"), indent=4)

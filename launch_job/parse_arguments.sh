@@ -170,8 +170,8 @@ function parse_arguments() {
                 shift
                 ;;
             # rsdqn specific
-            -sphp | --n_training_step_per_hypeparameter)
-                ARGS="$ARGS -sphp $2"
+            -nephp | --n_epochs_per_hypeparameter)
+                ARGS="$ARGS -nephp $2"
                 shift
                 shift
                 ;;

@@ -50,7 +50,7 @@ def run(argvs=sys.argv[1:]):
     train(train_key, p, agent, env, rb)
 
     # Save extra data
-    os.makedirs(os.path.join(p["save_path"], f"indices_and_hyperparameters_details"), exist_ok=True)
+    os.makedirs(os.path.join(p["save_path"], "indices_and_hyperparameters_details"), exist_ok=True)
     indices_and_hyperparameters_details_path = os.path.join(
         p["save_path"], f"indices_and_hyperparameters_details/{p['seed']}.json"
     )
