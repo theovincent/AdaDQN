@@ -83,6 +83,8 @@ class RSDQN:
                 force_new=True,
             )
 
+            self.target_params = self.params.copy()
+
             self.hyperparameters_details["optimizer_hps"].append(self.hyperparameters_fn["optimizer_hps"])
             print(
                 f"\nChange optimizer: {self.hyperparameters_details['optimizer_hps'][-2]} for {self.hyperparameters_fn['optimizer_hps']}",

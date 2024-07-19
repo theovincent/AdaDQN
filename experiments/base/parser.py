@@ -107,7 +107,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_epochs",
         help="No. of epochs to train for.",
         type=int,
-        default=50,
+        default=200,
     )
 
     parser.add_argument(
