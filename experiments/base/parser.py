@@ -121,6 +121,32 @@ def base_parser(parser: argparse.ArgumentParser):
 
 def hyperparameter_search_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
+        "-os",
+        "--optimizers",
+        nargs="*",
+        help="Optimizers.",
+        type=str,
+        choices=list(OPTIMIZERS.keys()),
+        default=list(OPTIMIZERS.keys()),
+    )
+    parser.add_argument(
+        "-lrr",
+        "--lr_range",
+        nargs=2,
+        help="Range of the optimizer's learning rate. It is sample in log space [10^low_range, 10^high_range].",
+        type=int,
+        default=[-6, -2],
+    )
+    parser.add_argument(
+        "-ls",
+        "--losses",
+        nargs="*",
+        help="Losses.",
+        type=str,
+        choices=list(LOSSES.keys()),
+        default=list(LOSSES.keys()),
+    )
+    parser.add_argument(
         "-nlr",
         "--n_layers_range",
         nargs=2,
@@ -144,32 +170,6 @@ def hyperparameter_search_parser(parser: argparse.ArgumentParser):
         type=str,
         choices=list(ACTIVATIONS.keys()),
         default=list(ACTIVATIONS.keys()),
-    )
-    parser.add_argument(
-        "-lrr",
-        "--lr_range",
-        nargs=2,
-        help="Range of the optimizer's learning rate. It is sample in log space [10^low_range, 10^high_range].",
-        type=int,
-        default=[-6, -2],
-    )
-    parser.add_argument(
-        "-os",
-        "--optimizers",
-        nargs="*",
-        help="Optimizers.",
-        type=str,
-        choices=list(OPTIMIZERS.keys()),
-        default=list(OPTIMIZERS.keys()),
-    )
-    parser.add_argument(
-        "-ls",
-        "--losses",
-        nargs="*",
-        help="Losses.",
-        type=str,
-        choices=list(LOSSES.keys()),
-        default=list(LOSSES.keys()),
     )
 
 
@@ -232,6 +232,40 @@ def rsdqn_parser(env_name: str, argvs):
         "-nephp",
         "--n_epochs_per_hypeparameter",
         help="No. of training steps per hyperparameter update.",
+        type=int,
+        default=20,
+    )
+    args = parser.parse_args(argvs)
+
+    p = vars(args)
+    p["env"] = env_name
+    p["algo"] = algo_name
+    p["save_path"] = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}",
+    )
+
+    return p
+
+
+def dehbdqn_parser(env_name: str, argvs):
+    algo_name = "dehbdqn"
+    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
+
+    base_parser(parser)
+    hyperparameter_search_parser(parser)
+    parser.add_argument(
+        "-mnephp",
+        "--min_n_epochs_per_hypeparameter",
+        help="Minimal no. of training steps per hyperparameter update.",
+        type=int,
+        default=2,
+    )
+    parser.add_argument(
+        "-maxephp",
+        "--max_n_epochs_per_hypeparameter",
+        help="Maximal no. of training steps per hyperparameter update.",
         type=int,
         default=20,
     )

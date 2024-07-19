@@ -5,7 +5,7 @@ from flax.core import FrozenDict
 from functools import partial
 import jax.numpy as jnp
 import numpy as np
-from slimRL.networks.hyperparameter_generator import HyperparametersGenerator
+from slimRL.networks.hyperparameter_generator import RandomGenerator
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 
 
@@ -16,12 +16,12 @@ class AdaDQN:
         observation_dim,
         n_actions,
         n_networks,
+        optimizers: List[Callable],
+        lr_range: Tuple[int],
+        losses: List[str],
         n_layers_range: Tuple[int],
         n_neurons_range: Tuple[int],
         activations: List[Callable],
-        lr_range: Tuple[int],
-        optimizers: List[Callable],
-        losses: str,
         gamma: float,
         update_horizon: int,
         update_to_data: int,
@@ -33,15 +33,15 @@ class AdaDQN:
     ):
         self.q_key, self.action_key = jax.random.split(key)
         self.n_networks = n_networks
-        self.hyperparameters_generator = HyperparametersGenerator(
+        self.hyperparameters_generator = RandomGenerator(
             observation_dim,
             n_actions,
+            optimizers,
+            lr_range,
+            losses,
             n_layers_range,
             n_neurons_range,
             activations,
-            lr_range,
-            optimizers,
-            losses,
             optimizer_change_probability,
             architecture_change_probability,
         )

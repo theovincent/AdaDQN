@@ -100,6 +100,32 @@ function parse_arguments() {
                 shift
                 ;;
             # Hyperparameter search Specific
+            -os | --optimizers)
+                shift
+                OPTIMIZERS=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    OPTIMIZERS="$OPTIMIZERS $1"
+                    shift
+                done
+                ARGS="$ARGS -os $OPTIMIZERS"
+                ;;
+            -lrr | --lr_range)
+                ARGS="$ARGS -lrr $2 $3"
+                shift
+                shift
+                shift
+                ;;
+            -ls | --losses)
+                shift
+                LOSSES=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    LOSSES="$LOSSES $1"
+                    shift
+                done
+                ARGS="$ARGS -ls $LOSSES"
+                ;;
             -nlr | --n_layers_range)
                 ARGS="$ARGS -nlr $2 $3"
                 shift
@@ -121,32 +147,6 @@ function parse_arguments() {
                     shift
                 done
                 ARGS="$ARGS -as $ACTIVATIONS"
-                ;;
-            -lrr | --lr_range)
-                ARGS="$ARGS -lrr $2 $3"
-                shift
-                shift
-                shift
-                ;;
-            -os | --optimizers)
-                shift
-                OPTIMIZERS=""
-                # parse all the layers till next flag encountered
-                while [[ $1 != -* && $# -gt 0 ]]; do
-                    OPTIMIZERS="$OPTIMIZERS $1"
-                    shift
-                done
-                ARGS="$ARGS -os $OPTIMIZERS"
-                ;;
-            -ls | --losses)
-                shift
-                LOSSES=""
-                # parse all the layers till next flag encountered
-                while [[ $1 != -* && $# -gt 0 ]]; do
-                    LOSSES="$LOSSES $1"
-                    shift
-                done
-                ARGS="$ARGS -ls $LOSSES"
                 ;;
             # adadqn specific
             -nn | --n_networks)
