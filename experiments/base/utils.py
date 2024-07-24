@@ -28,7 +28,12 @@ SHARED_PARAMS = [
 ]
 
 AGENT_PARAMS = {
-    "adadqn": ["n_networks", "end_online_exp", "optimizer_change_probability", "architecture_change_probability"],
+    "adadqn": [
+        "n_networks",
+        "end_online_exp",
+        "optimizer_change_probability",
+        "architecture_change_probability",
+    ],
     "rsdqn": ["n_epochs_per_hypeparameter"],
     "dehbdqn": ["min_n_epochs_per_hypeparameter", "max_n_epochs_per_hypeparameter"],
 }

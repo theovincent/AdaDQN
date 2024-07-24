@@ -175,6 +175,17 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
+            # dehbdqn specific
+            -minnephp | --min_n_epochs_per_hypeparameter)
+                ARGS="$ARGS -minnephp $2"
+                shift
+                shift
+                ;;
+            -maxnephp | --max_n_epochs_per_hypeparameter)
+                ARGS="$ARGS -maxnephp $2"
+                shift
+                shift
+                ;;
             -?*)
                 printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
                 shift

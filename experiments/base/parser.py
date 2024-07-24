@@ -256,14 +256,14 @@ def dehbdqn_parser(env_name: str, argvs):
     base_parser(parser)
     hyperparameter_search_parser(parser)
     parser.add_argument(
-        "-mnephp",
+        "-minnephp",
         "--min_n_epochs_per_hypeparameter",
         help="Minimal no. of training steps per hyperparameter update.",
         type=int,
         default=2,
     )
     parser.add_argument(
-        "-maxephp",
+        "-maxnephp",
         "--max_n_epochs_per_hypeparameter",
         help="Maximal no. of training steps per hyperparameter update.",
         type=int,

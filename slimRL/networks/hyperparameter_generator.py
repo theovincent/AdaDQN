@@ -3,7 +3,7 @@ from functools import partial
 import jax
 import jax.numpy as jnp
 from dehb import DEHB
-from ConfigSpace import ConfigurationSpace, Integer, Float, Categorical, Normal
+from ConfigSpace import ConfigurationSpace, Integer, Float, Configuration
 from slimRL.networks.single_dqn import SingleDQN
 
 
@@ -40,7 +40,12 @@ class RandomGenerator:
         }
 
     def __call__(
-        self, key: jax.Array, hyperparameters_fn: Callable, params: Dict, optimizer_state: Dict, force_new: bool
+        self,
+        key: jax.Array,
+        hyperparameters_fn: Callable,
+        params: Dict,
+        optimizer_state: Dict,
+        force_new: bool,
     ):
         key, optimizer_key, architecture_key = jax.random.split(key, 3)
 
@@ -65,7 +70,12 @@ class RandomGenerator:
                 neurons_key, activation_key, init_key = jax.random.split(key, 3)
                 hyperparameters_fn["architecture_hps"]["idx_loss"] = idx_loss
                 hyperparameters_fn["architecture_hps"]["hidden_layers"] = list(
-                    jax.random.randint(neurons_key, (n_layers,), self.n_neurons_range[0], self.n_neurons_range[1] + 1)
+                    jax.random.randint(
+                        neurons_key,
+                        (n_layers,),
+                        self.n_neurons_range[0],
+                        self.n_neurons_range[1] + 1,
+                    )
                 )
                 hyperparameters_fn["architecture_hps"]["indices_activations"] = list(
                     jax.random.randint(activation_key, (n_layers,), 0, len(self.activations))
@@ -92,14 +102,21 @@ class RandomGenerator:
         else:
             change_architecture = False
 
-        return hyperparameters_fn, params, optimizer_state, change_optimizer, change_architecture
+        return (
+            hyperparameters_fn,
+            params,
+            optimizer_state,
+            change_optimizer,
+            change_architecture,
+        )
 
     @partial(jax.jit, static_argnames="self")
     def change_optimizer_hps(self, key, optimizer_hps, force_new):
         change_key, generate_hp_key = jax.random.split(key)
 
         change_optimizer = jnp.logical_or(
-            force_new, jax.random.bernoulli(change_key, p=self.optimizer_change_probability)
+            force_new,
+            jax.random.bernoulli(change_key, p=self.optimizer_change_probability),
         )
         optimizer_hps = jax.lax.cond(
             change_optimizer,
@@ -127,10 +144,14 @@ class RandomGenerator:
         change_key, generate_hp_key = jax.random.split(key)
 
         change_architecture = jnp.logical_or(
-            force_new, jax.random.bernoulli(change_key, p=self.architecture_change_probability)
+            force_new,
+            jax.random.bernoulli(change_key, p=self.architecture_change_probability),
         )
         idx_loss, n_layers = jax.lax.cond(
-            change_architecture, self.generate_hp_architecture, lambda key: (0, 0), generate_hp_key
+            change_architecture,
+            self.generate_hp_architecture,
+            lambda key: (0, 0),
+            generate_hp_key,
         )
 
         return change_architecture, idx_loss, n_layers
@@ -170,7 +191,11 @@ class DEHBGenerator:
             seed=int(key[0]),
             space={
                 "idx_optimizer": Integer("idx_optimizer", bounds=(0, len(optimizers) - 1)),
-                "learning_rate": Float("learning_rate", bounds=(10 ** lr_range[0], 10 ** lr_range[1]), log=True),
+                "learning_rate": Float(
+                    "learning_rate",
+                    bounds=(10 ** lr_range[0], 10 ** lr_range[1]),
+                    log=True,
+                ),
                 "idx_loss": Integer("idx_loss", bounds=(0, len(losses) - 1)),
                 "n_layers": Integer("n_layers", bounds=(n_layers_range[0], n_layers_range[1])),
                 "n_neurons": Integer("n_neurons", bounds=(n_neurons_range[0], n_neurons_range[1])),
@@ -188,16 +213,23 @@ class DEHBGenerator:
         )
 
     def __call__(self, key, hyperparameters_fn: Dict, avg_return: float, fidelity: int):
-
         if hyperparameters_fn is not None:
             job_info = {
-                "idx_optimizer": hyperparameters_fn["optimizer_hps"]["idx_optimizer"],
-                "learning_rate": hyperparameters_fn["optimizer_hps"]["learning_rate"],
-                "idx_loss": hyperparameters_fn["architecture_hps"]["idx_loss"],
-                "n_layers": len(hyperparameters_fn["architecture_hps"]["hidden_layers"]),
-                "n_neurons": hyperparameters_fn["architecture_hps"]["hidden_layers"][0],
-                "idx_activation": hyperparameters_fn["architecture_hps"]["indices_activations"][0],
+                "config": Configuration(
+                    self.meta_optimizer.cs,
+                    values={
+                        "idx_optimizer": hyperparameters_fn["optimizer_hps"]["idx_optimizer"],
+                        "learning_rate": hyperparameters_fn["optimizer_hps"]["learning_rate"],
+                        "idx_loss": hyperparameters_fn["architecture_hps"]["idx_loss"],
+                        "n_layers": len(hyperparameters_fn["architecture_hps"]["hidden_layers"]),
+                        "n_neurons": hyperparameters_fn["architecture_hps"]["hidden_layers"][0],
+                        "idx_activation": hyperparameters_fn["architecture_hps"]["indices_activations"][0],
+                    },
+                ),
                 "fidelity": fidelity,
+                "parent_id": hyperparameters_fn["parent_id"],
+                "config_id": hyperparameters_fn["config_id"],
+                "bracket_id": hyperparameters_fn["bracket_id"],
             }
             #  The cost of getting the fitness is egal to the requested fidelity
             self.meta_optimizer.tell(job_info, {"fitness": -avg_return, "cost": fidelity})
@@ -215,6 +247,9 @@ class DEHBGenerator:
                 "hidden_layers": [job_info["config"]["n_neurons"]] * job_info["config"]["n_layers"],
                 "indices_activations": [job_info["config"]["idx_activation"]] * job_info["config"]["n_layers"],
             },
+            "parent_id": job_info["parent_id"],
+            "config_id": job_info["config_id"],
+            "bracket_id": job_info["bracket_id"],
         }
 
         optimizer = self.optimizers[hyperparameters_fn["optimizer_hps"]["idx_optimizer"]](
@@ -233,6 +268,8 @@ class DEHBGenerator:
         hyperparameters_fn["grad_and_loss_fn"] = q.value_and_grad
         hyperparameters_fn["best_action_fn"] = q.best_action
         params = q.q_network.init(key, jnp.zeros(self.observation_dim, dtype=jnp.float32))
+
+        print(job_info)
 
         optimizer_state = optimizer.init(params)
 
