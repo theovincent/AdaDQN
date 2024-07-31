@@ -40,7 +40,7 @@ def run(argvs=sys.argv[1:]):
     results_folder = []
 
     for exp in p["experiment_folders"]:
-        exp_folder = os.path.join(base_path, exp)
+        exp_folder = os.path.join(base_path, exp, "episode_returns_and_lenghts")
         assert os.path.exists(exp_folder), f"{exp_folder} not found"
         results_folder.append(exp_folder)
 
@@ -50,12 +50,11 @@ def run(argvs=sys.argv[1:]):
         experiment = result.split("exp_output")[-1][1:]
         returns[experiment] = np.array(
             [
-                [np.mean(i) for i in json.load(open(os.path.join(result, f), "r"))]
+                [np.mean(i) for i in json.load(open(os.path.join(result, f), "r"))["episode_returns"]]
                 for f in os.listdir(result)
-                if "rewards" in f
             ]
         )
-        parameters[experiment] = json.load(open(os.path.join(result, "..", "parameters.json"), "r"))
+        parameters[experiment] = json.load(open(os.path.join(result, "../..", "parameters.json"), "r"))
 
     env_steps = parameters[experiment]["n_epochs"] * parameters[experiment]["n_training_steps_per_epoch"]
     plot_value(
@@ -63,7 +62,7 @@ def run(argvs=sys.argv[1:]):
         ylabel="IQM Total reward",
         x_val=np.arange(
             0,
-            env_steps + parameters[experiment]["n_training_steps_per_epoch"],
+            env_steps,
             parameters[experiment]["n_training_steps_per_epoch"],
         ).tolist(),
         y_val=returns,
@@ -120,7 +119,7 @@ def plot_value(xlabel, ylabel, x_val, y_val, xlim, xticks, **kwargs):
         plt.ticklabel_format(style="sci", axis="x", scilimits=(0, 0))
     if kwargs.get("sci_y", False):
         plt.ticklabel_format(style="sci", axis="y", scilimits=(0, 0))
-    plt.legend(loc="lower right")
+    plt.legend(loc="lower right", bb)
     plt.grid()
     plt.tight_layout()
 
