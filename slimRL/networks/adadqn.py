@@ -82,9 +82,9 @@ class AdaDQN:
         self.update_to_data = update_to_data
         self.target_update_frequency = target_update_frequency
 
-    def update_online_params(self, step: int, key: jax.Array, batch_size: int, replay_buffer: ReplayBuffer):
+    def update_online_params(self, step: int, replay_buffer: ReplayBuffer):
         if step % self.update_to_data == 0:
-            batch_samples = replay_buffer.sample_transition_batch(batch_size, key)
+            batch_samples = replay_buffer.sample_transition_batch()
 
             losses = self.learn_on_batch(batch_samples)
             self.losses += losses

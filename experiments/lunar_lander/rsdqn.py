@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import jax
+import numpy as np
 from experiments.base.parser import rsdqn_parser
 from slimRL.environments.lunar_lander import LunarLander
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
@@ -26,6 +27,11 @@ def run(argvs=sys.argv[1:]):
         replay_capacity=p["replay_capacity"],
         update_horizon=p["update_horizon"],
         gamma=p["gamma"],
+        stack_size=1,
+        observation_dtype=np.float32,
+        terminal_dtype=np.uint8,
+        action_dtype=np.int32,
+        reward_dtype=np.float32,
     )
     agent = RSDQN(
         q_key,

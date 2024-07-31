@@ -6,6 +6,8 @@ from functools import partial
 import jax.numpy as jnp
 from slimRL.networks.architectures.dqn_net import DQNNet
 
+from slimRL.networks import IDX_RB
+
 
 class BaseDQN:
     def __init__(self, n_actions: int, hidden_layers: list, activations: List, loss: Callable):
@@ -20,7 +22,7 @@ class BaseDQN:
 
     def loss_from_targets(self, params: FrozenDict, targets, samples):
         q_values = jax.vmap(lambda state, action: self.apply(params, state)[action])(
-            samples["observations"], samples["actions"]
+            samples[IDX_RB["state"]], samples[IDX_RB["action"]]
         )
 
         # alwars return the l2 loss to compare fairly between the networks

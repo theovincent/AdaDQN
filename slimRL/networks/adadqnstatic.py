@@ -8,6 +8,8 @@ import numpy as np
 from slimRL.networks.base_dqn import BaseDQN
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 
+from slimRL.networks import IDX_RB
+
 
 class AdaDQNStatic:
     def __init__(
@@ -67,9 +69,9 @@ class AdaDQNStatic:
         self.update_to_data = update_to_data
         self.target_update_frequency = target_update_frequency
 
-    def update_online_params(self, step: int, key: jax.Array, batch_size: int, replay_buffer: ReplayBuffer):
+    def update_online_params(self, step: int, replay_buffer: ReplayBuffer):
         if step % self.update_to_data == 0:
-            batch_samples = replay_buffer.sample_transition_batch(batch_size, key)
+            batch_samples = replay_buffer.sample_transition_batch()
 
             losses = self.learn_on_batch(batch_samples)
             self.losses += losses
@@ -92,7 +94,7 @@ class AdaDQNStatic:
         losses = np.zeros(self.n_networks)
 
         value_next_states = self.hyperparameters_fn[self.idx_compute_target]["apply_fn"](
-            self.target_params, batch_samples["next_observations"]
+            self.target_params, batch_samples[IDX_RB["next_state"]]
         )
         targets = self.compute_target_from_values(value_next_states, batch_samples)
 
@@ -113,9 +115,9 @@ class AdaDQNStatic:
     @partial(jax.jit, static_argnames="self")
     def compute_target_from_values(self, value_next_states, batch_samples):
         # computes the target value for single or a batch of samples
-        return batch_samples["rewards"] + (1 - batch_samples["dones"]) * self.gamma**self.update_horizon * jnp.max(
-            value_next_states, axis=-1
-        )
+        return batch_samples[IDX_RB["reward"]] + (
+            1 - batch_samples[IDX_RB["terminal"]]
+        ) * self.gamma**self.update_horizon * jnp.max(value_next_states, axis=-1)
 
     def best_action(self, params: FrozenDict, state: jnp.ndarray):
         # computes the best action for a single state

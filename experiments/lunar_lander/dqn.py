@@ -1,6 +1,7 @@
 import os
 import sys
 import jax
+import numpy as np
 from experiments.base.parser import dqn_parser
 from slimRL.environments.lunar_lander import LunarLander
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
@@ -23,8 +24,14 @@ def run(argvs=sys.argv[1:]):
     rb = ReplayBuffer(
         observation_shape=env.observation_shape,
         replay_capacity=p["replay_capacity"],
+        batch_size=p["batch_size"],
         update_horizon=p["update_horizon"],
         gamma=p["gamma"],
+        stack_size=1,
+        observation_dtype=np.float32,
+        terminal_dtype=np.uint8,
+        action_dtype=np.int32,
+        reward_dtype=np.float32,
     )
     agent = DQN(
         q_key,

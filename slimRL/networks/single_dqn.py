@@ -6,11 +6,13 @@ from functools import partial
 import jax.numpy as jnp
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 
+from slimRL.networks import IDX_RB
+
 
 class SingleDQN:
-    def update_online_params(self, step: int, key: jax.Array, batch_size: int, replay_buffer: ReplayBuffer):
+    def update_online_params(self, step: int, replay_buffer: ReplayBuffer):
         if step % self.update_to_data == 0:
-            batch_samples = replay_buffer.sample_transition_batch(batch_size, key)
+            batch_samples = replay_buffer.sample_transition_batch()
 
             loss = self.learn_on_batch(batch_samples)
 
@@ -22,7 +24,7 @@ class SingleDQN:
             self.target_params = self.params.copy()
 
     def learn_on_batch(self, batch_samples):
-        value_next_states = self.hyperparameters_fn["apply_fn"](self.target_params, batch_samples["next_observations"])
+        value_next_states = self.hyperparameters_fn["apply_fn"](self.target_params, batch_samples[IDX_RB["next_state"]])
         targets = self.compute_target_from_values(value_next_states, batch_samples)
 
         loss, grad_loss = self.hyperparameters_fn["grad_and_loss_fn"](self.params, targets, batch_samples)
@@ -36,9 +38,9 @@ class SingleDQN:
     @partial(jax.jit, static_argnames="self")
     def compute_target_from_values(self, value_next_states, batch_samples):
         # computes the target value for single or a batch of samples
-        return batch_samples["rewards"] + (1 - batch_samples["dones"]) * self.gamma**self.update_horizon * jnp.max(
-            value_next_states, axis=-1
-        )
+        return batch_samples[IDX_RB["reward"]] + (
+            1 - batch_samples[IDX_RB["terminal"]]
+        ) * self.gamma**self.update_horizon * jnp.max(value_next_states, axis=-1)
 
     def best_action(self, params: FrozenDict, state: jnp.ndarray):
         # computes the best action for a single state

@@ -26,7 +26,7 @@ def train(
         has_reset = False
 
         while idx_training_step < p["n_training_steps_per_epoch"] or not has_reset:
-            key, exploration_key, sample_batch_key = jax.random.split(key, 3)
+            key, exploration_key = jax.random.split(key)
             reward, has_reset = collect_single_sample(
                 exploration_key, env, agent, rb, p, epsilon_schedule, n_training_steps
             )
@@ -38,7 +38,7 @@ def train(
                 episode_lengths_per_epoch[idx_epoch].append(0)
 
             if n_training_steps > p["n_initial_samples"]:
-                agent.update_online_params(n_training_steps, sample_batch_key, p["batch_size"], rb)
+                agent.update_online_params(n_training_steps, rb)
                 agent.update_target_params(n_training_steps)
 
             idx_training_step += 1

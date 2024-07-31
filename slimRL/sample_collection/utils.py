@@ -22,11 +22,10 @@ def collect_single_sample(
 
     obs = env.state.copy()
     _, reward, termination = env.step(action)
-    truncation = env.n_steps == p["horizon"]
-    rb.add(obs, action, reward, termination, truncation)
+    episode_end = termination or env.n_steps >= p["horizon"]
+    rb.add(obs, action, reward, termination, episode_end=episode_end)
 
-    has_reset = termination or truncation
-    if has_reset:
-        env.reset(key=key)
+    if episode_end:
+        env.reset()
 
-    return reward, has_reset
+    return reward, episode_end
