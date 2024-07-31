@@ -208,7 +208,7 @@ def adadqnstatic_parser(env_name: str, argvs):
         nargs="*",
         help="The learning rates for the n_networks Q-networks.",
         type=float,
-        default=[1e-4] * 4,
+        default=[1e-3] * 4,
     )
     parser.add_argument(
         "-ls",
@@ -225,7 +225,7 @@ def adadqnstatic_parser(env_name: str, argvs):
         nargs="*",
         help="The hidden layers for the n_networks Q-networks. Seperate the elements by a comma.",
         type=str,
-        default=["100,100"] * 4,
+        default=["200,200"] * 4,
     )
     parser.add_argument(
         "-as",

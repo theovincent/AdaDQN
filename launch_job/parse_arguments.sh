@@ -123,7 +123,7 @@ function parse_arguments() {
                     HIDDEN_LAYER="$HIDDEN_LAYER $1"
                     shift
                 done
-                ARGS="$ARGS -hl $HIDDEN_LAYER"
+                ARGS="$ARGS --hidden_layers $HIDDEN_LAYER"
                 ;;
             # adadqnstatic specific
             -lr_list | --lr_list)

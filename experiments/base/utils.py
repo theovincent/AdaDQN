@@ -24,7 +24,7 @@ HP_SEARCH_PARAMS = ["optimizers", "lr_range", "losses", "n_layers_range", "n_neu
 
 AGENT_PARAMS = {
     "dqn": ["optimizer", "lr", "loss", "hidden_layers", "activations"],
-    "adadqnstatic": ["n_networks", "optimizers", "lrs", "losses", "hidden_layers", "activations", "end_online_exp"],
+    "adadqnstatic": ["n_networks", "optimizers", "lr_list", "losses", "hidden_layers", "activations", "end_online_exp"],
     "adadqn": HP_SEARCH_PARAMS
     + ["n_networks", "end_online_exp", "optimizer_change_probability", "architecture_change_probability"],
     "rsdqn": HP_SEARCH_PARAMS + ["n_epochs_per_hyperparameter"],
