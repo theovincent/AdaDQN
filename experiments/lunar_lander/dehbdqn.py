@@ -41,8 +41,8 @@ def run(argvs=sys.argv[1:]):
         update_horizon=p["update_horizon"],
         update_to_data=p["update_to_data"],
         target_update_frequency=p["target_update_frequency"],
-        min_n_epochs_per_hypeparameter=p["min_n_epochs_per_hypeparameter"],
-        max_n_epochs_per_hypeparameter=p["max_n_epochs_per_hypeparameter"],
+        min_n_epochs_per_hyperparameter=p["min_n_epochs_per_hyperparameter"],
+        max_n_epochs_per_hyperparameter=p["max_n_epochs_per_hyperparameter"],
     )
     train(train_key, p, agent, env, rb)
 

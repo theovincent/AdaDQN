@@ -18,24 +18,17 @@ SHARED_PARAMS = [
     "duration_epsilon",
     "n_epochs",
     "n_training_steps_per_epoch",
-    # Hyperparameter search
-    "optimizers",
-    "lr_range",
-    "losses",
-    "n_layers_range",
-    "n_neurons_range",
-    "activations",
 ]
 
+HP_SEARCH_PARAMS = ["optimizers", "lr_range", "losses", "n_layers_range", "n_neurons_range", "activations"]
+
 AGENT_PARAMS = {
-    "adadqn": [
-        "n_networks",
-        "end_online_exp",
-        "optimizer_change_probability",
-        "architecture_change_probability",
-    ],
-    "rsdqn": ["n_epochs_per_hypeparameter"],
-    "dehbdqn": ["min_n_epochs_per_hypeparameter", "max_n_epochs_per_hypeparameter"],
+    "dqn": ["optimizer", "lr", "loss", "hidden_layers", "activations"],
+    "adadqn_static": ["n_networks", "optimizers", "lrs", "losses", "hidden_layers", "activations", "end_online_exp"],
+    "adadqn": HP_SEARCH_PARAMS
+    + ["n_networks", "end_online_exp", "optimizer_change_probability", "architecture_change_probability"],
+    "rsdqn": HP_SEARCH_PARAMS + ["n_epochs_per_hyperparameter"],
+    "dehbdqn": HP_SEARCH_PARAMS + ["min_n_epochs_per_hyperparameter", "max_n_epochs_per_hyperparameter"],
 }
 
 
@@ -100,26 +93,24 @@ def store_params(p: dict):
         params = {}
 
         # store shared params
-        params["---- Shared parameters ---"] = "----------------"
+        params["---- Shared parameters ----"] = "----------------"
         for shared_param in SHARED_PARAMS:
             params[shared_param] = p[shared_param]
 
-    if f"---- {p['algo']} ---" not in params.keys():
+    if f"---- {p['algo']} ----" not in params.keys():
         # store algo params
-        params[f"---- {p['algo']} ---"] = "-----------------------------"
+        params[f"---- {p['algo']} ----"] = "-----------------------------"
         for agent_param in AGENT_PARAMS[p["algo"]]:
-            params[agent_param] = p[agent_param]
+            params[agent_param + "_" + p["algo"]] = p[agent_param]
 
     # set parameter order for sorting all keys in a pre-defined order
     algo_params = []
-    for agent in sorted(AGENT_PARAMS):
-        if f"---- {agent} ---" in params:
-            algo_params = algo_params + [f"---- {agent} ---"] + AGENT_PARAMS[agent]
-
-    params_order = SHARED_PARAMS + algo_params
+    for agent in AGENT_PARAMS:
+        if f"---- {agent} ----" in params:
+            algo_params = algo_params + [f"---- {agent} ----"] + [key + "_" + agent for key in AGENT_PARAMS[agent]]
 
     # sort keys in uniform order and store
-    params = {key: params[key] for key in params_order}
+    params = {key: params[key] for key in SHARED_PARAMS + algo_params}
 
     json.dump(params, open(params_path, "w"), indent=4)
 

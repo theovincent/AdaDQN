@@ -170,18 +170,18 @@ function parse_arguments() {
                 shift
                 ;;
             # rsdqn specific
-            -nephp | --n_epochs_per_hypeparameter)
+            -nephp | --n_epochs_per_hyperparameter)
                 ARGS="$ARGS -nephp $2"
                 shift
                 shift
                 ;;
             # dehbdqn specific
-            -minnephp | --min_n_epochs_per_hypeparameter)
+            -minnephp | --min_n_epochs_per_hyperparameter)
                 ARGS="$ARGS -minnephp $2"
                 shift
                 shift
                 ;;
-            -maxnephp | --max_n_epochs_per_hypeparameter)
+            -maxnephp | --max_n_epochs_per_hyperparameter)
                 ARGS="$ARGS -maxnephp $2"
                 shift
                 shift

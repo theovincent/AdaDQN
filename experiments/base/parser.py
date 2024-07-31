@@ -119,6 +119,144 @@ def base_parser(parser: argparse.ArgumentParser):
     )
 
 
+def dqn_parser(env_name: str, argvs):
+    algo_name = "dqn"
+    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
+
+    base_parser(parser)
+    parser.add_argument(
+        "-o",
+        "--optimizer",
+        help="Optimizer.",
+        type=str,
+        choices=list(OPTIMIZERS.keys()),
+        default=list(OPTIMIZERS.keys())[4],
+    )
+    parser.add_argument(
+        "-lr",
+        "--lr",
+        nargs=2,
+        help="Learning rate.",
+        type=float,
+        default=1e-4,
+    )
+    parser.add_argument(
+        "-l",
+        "--loss",
+        help="Loss function.",
+        type=str,
+        choices=list(LOSSES.keys()),
+        default=list(LOSSES.keys())[2],
+    )
+    parser.add_argument(
+        "-hl",
+        "--hidden_layers",
+        nargs="*",
+        help="Hidden layers.",
+        type=int,
+        default=[200, 200],
+    )
+    parser.add_argument(
+        "-as",
+        "--activations",
+        nargs="*",
+        help="Activation functions.",
+        type=str,
+        choices=list(ACTIVATIONS.keys()),
+        default=[list(ACTIVATIONS.keys())[9]] * 2,
+    )
+
+    args = parser.parse_args(argvs)
+
+    p = vars(args)
+    p["env"] = env_name
+    p["algo"] = algo_name
+    p["save_path"] = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}",
+    )
+
+    return p
+
+
+def adadqn_static_parser(env_name: str, argvs):
+    algo_name = "adadqn_static"
+    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
+
+    base_parser(parser)
+    parser.add_argument(
+        "-nn",
+        "--n_networks",
+        help="No. of online Q-networks.",
+        type=int,
+        default=4,
+    )
+    parser.add_argument(
+        "-os",
+        "--optimizers",
+        nargs="*",
+        help="The optimizers for the n_networks Q-networks.",
+        type=str,
+        choices=list(OPTIMIZERS.keys()),
+        default=[list(OPTIMIZERS.keys())[4]] * 4,
+    )
+    parser.add_argument(
+        "-lrs",
+        "--lrs",
+        nargs="*",
+        help="The learning rates for the n_networks Q-networks.",
+        type=float,
+        default=[1e-4] * 4,
+    )
+    parser.add_argument(
+        "-ls",
+        "--losses",
+        nargs="*",
+        help="The losses for the n_networks Q-networks.",
+        type=str,
+        choices=list(LOSSES.keys()),
+        default=[list(LOSSES.keys())[2]] * 4,
+    )
+    parser.add_argument(
+        "-hls",
+        "--hidden_layers",
+        nargs="*",
+        help="The hidden layers for the n_networks Q-networks. Seperate the elements by a comma.",
+        type=str,
+        default=["100,100"] * 4,
+    )
+    parser.add_argument(
+        "-as",
+        "--activations",
+        nargs="*",
+        help="The activation functions for the n_networks Q-networks. Seperate the elements by a comma.",
+        type=str,
+        default=[f"{list(ACTIVATIONS.keys())[9]},{list(ACTIVATIONS.keys())[9]}"] * 4,
+    )
+    parser.add_argument(
+        "-eoe",
+        "--end_online_exp",
+        help="End exploration espilon for sampling action.",
+        type=float,
+        default=0.01,
+    )
+    args = parser.parse_args(argvs)
+
+    p = vars(args)
+    p["hidden_layers"] = [list(map(int, hidden_layers.split(","))) for hidden_layers in p["hidden_layers"]]
+    p["activations"] = [activations.split(",") for activations in p["activations"]]
+    p["env"] = env_name
+    p["algo"] = algo_name
+    p["save_path"] = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}",
+    )
+
+    return p
+
+
 def hyperparameter_search_parser(parser: argparse.ArgumentParser):
     parser.add_argument(
         "-os",
@@ -133,7 +271,7 @@ def hyperparameter_search_parser(parser: argparse.ArgumentParser):
         "-lrr",
         "--lr_range",
         nargs=2,
-        help="Range of the optimizer's learning rate. It is sample in log space [10^low_range, 10^high_range].",
+        help="Range of the learning rate. It is sample in log space [10^low_range, 10^high_range].",
         type=int,
         default=[-6, -2],
     )
@@ -230,7 +368,7 @@ def rsdqn_parser(env_name: str, argvs):
     hyperparameter_search_parser(parser)
     parser.add_argument(
         "-nephp",
-        "--n_epochs_per_hypeparameter",
+        "--n_epochs_per_hyperparameter",
         help="No. of training steps per hyperparameter update.",
         type=int,
         default=20,
@@ -257,14 +395,14 @@ def dehbdqn_parser(env_name: str, argvs):
     hyperparameter_search_parser(parser)
     parser.add_argument(
         "-minnephp",
-        "--min_n_epochs_per_hypeparameter",
+        "--min_n_epochs_per_hyperparameter",
         help="Minimal no. of training steps per hyperparameter update.",
         type=int,
         default=2,
     )
     parser.add_argument(
         "-maxnephp",
-        "--max_n_epochs_per_hypeparameter",
+        "--max_n_epochs_per_hyperparameter",
         help="Maximal no. of training steps per hyperparameter update.",
         type=int,
         default=20,

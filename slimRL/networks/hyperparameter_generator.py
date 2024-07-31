@@ -4,7 +4,7 @@ import jax
 import jax.numpy as jnp
 from dehb import DEHB
 from ConfigSpace import ConfigurationSpace, Integer, Float, Configuration
-from slimRL.networks.single_dqn import SingleDQN
+from slimRL.networks.base_dqn import BaseDQN
 
 
 class RandomGenerator:
@@ -81,7 +81,7 @@ class RandomGenerator:
                     jax.random.randint(activation_key, (n_layers,), 0, len(self.activations))
                 )
 
-                q = SingleDQN(
+                q = BaseDQN(
                     self.n_actions,
                     hyperparameters_fn["architecture_hps"]["hidden_layers"],
                     [self.activations[idx] for idx in hyperparameters_fn["architecture_hps"]["indices_activations"]],
@@ -177,8 +177,8 @@ class DEHBGenerator:
         n_layers_range: Tuple,
         n_neurons_range: Tuple,
         activations: List[Callable],
-        min_n_epochs_per_hypeparameter,
-        max_n_epochs_per_hypeparameter,
+        min_n_epochs_per_hyperparameter,
+        max_n_epochs_per_hyperparameter,
     ) -> None:
         self.observation_dim = observation_dim
         self.n_actions = n_actions
@@ -206,8 +206,8 @@ class DEHBGenerator:
         self.meta_optimizer = DEHB(
             cs=cs,
             dimensions=len(cs.values()),
-            min_fidelity=min_n_epochs_per_hypeparameter,
-            max_fidelity=max_n_epochs_per_hypeparameter,
+            min_fidelity=min_n_epochs_per_hyperparameter,
+            max_fidelity=max_n_epochs_per_hyperparameter,
             n_workers=1,
             output_path="experiments/dump",
         )
@@ -258,7 +258,7 @@ class DEHBGenerator:
         )
         hyperparameters_fn["optimizer_fn"] = jax.jit(optimizer.update)
 
-        q = SingleDQN(
+        q = BaseDQN(
             self.n_actions,
             hyperparameters_fn["architecture_hps"]["hidden_layers"],
             [self.activations[idx] for idx in hyperparameters_fn["architecture_hps"]["indices_activations"]],
@@ -269,8 +269,6 @@ class DEHBGenerator:
         hyperparameters_fn["grad_and_loss_fn"] = q.value_and_grad
         hyperparameters_fn["best_action_fn"] = q.best_action
         params = q.q_network.init(key, jnp.zeros(self.observation_dim, dtype=jnp.float32))
-
-        print(job_info)
 
         optimizer_state = optimizer.init(params)
 
