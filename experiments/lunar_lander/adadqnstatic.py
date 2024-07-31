@@ -2,10 +2,10 @@ import os
 import sys
 import json
 import jax
-from experiments.base.parser import adadqn_static_parser
+from experiments.base.parser import adadqnstatic_parser
 from slimRL.environments.lunar_lander import LunarLander
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
-from slimRL.networks.adadqn_static import AdaDQNStatic
+from slimRL.networks.adadqnstatic import AdaDQNStatic
 from experiments.base.dqn import train
 from experiments.base.utils import prepare_logs
 
@@ -14,7 +14,7 @@ from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
 
 def run(argvs=sys.argv[1:]):
     env_name = os.path.abspath(__file__).split(os.sep)[-2]
-    p = adadqn_static_parser(env_name, argvs)
+    p = adadqnstatic_parser(env_name, argvs)
 
     prepare_logs(p)
 
@@ -33,7 +33,7 @@ def run(argvs=sys.argv[1:]):
         env.n_actions,
         n_networks=p["n_networks"],
         optimizers=[OPTIMIZERS[key] for key in p["optimizers"]],
-        learning_rates=p["lrs"],
+        learning_rates=p["lr_list"],
         losses=[LOSSES[key] for key in p["losses"]],
         hidden_layers=p["hidden_layers"],
         activations=[[ACTIVATIONS[key] for key in list_key] for list_key in p["activations"]],

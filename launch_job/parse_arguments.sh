@@ -99,7 +99,44 @@ function parse_arguments() {
                 GPU=true
                 shift
                 ;;
-            # Hyperparameter search Specific
+            # dqn specific
+            -o | --optimizer)
+                ARGS="$ARGS -o $2"
+                shift
+                shift
+                ;;
+            -lr | --lr)
+                ARGS="$ARGS -lr $2"
+                shift
+                shift
+                ;;
+            -l | --loss)
+                ARGS="$ARGS -l $2"
+                shift
+                shift
+                ;;
+            -hl | -hls | --hidden_layers)
+                shift
+                HIDDEN_LAYER=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    HIDDEN_LAYER="$HIDDEN_LAYER $1"
+                    shift
+                done
+                ARGS="$ARGS -hl $HIDDEN_LAYER"
+                ;;
+            # adadqnstatic specific
+            -lr_list | --lr_list)
+                shift
+                LEARNING_RATES=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    LEARNING_RATES="$LEARNING_RATES $1"
+                    shift
+                done
+                ARGS="$ARGS -lr_list $LEARNING_RATES"
+                ;;
+            # Hyperparameter search specific
             -os | --optimizers)
                 shift
                 OPTIMIZERS=""

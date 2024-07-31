@@ -107,7 +107,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_epochs",
         help="No. of epochs to train for.",
         type=int,
-        default=200,
+        default=30,
     )
 
     parser.add_argument(
@@ -139,7 +139,7 @@ def dqn_parser(env_name: str, argvs):
         nargs=2,
         help="Learning rate.",
         type=float,
-        default=1e-4,
+        default=1e-3,
     )
     parser.add_argument(
         "-l",
@@ -180,8 +180,8 @@ def dqn_parser(env_name: str, argvs):
     return p
 
 
-def adadqn_static_parser(env_name: str, argvs):
-    algo_name = "adadqn_static"
+def adadqnstatic_parser(env_name: str, argvs):
+    algo_name = "adadqnstatic"
     print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
     parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
 
@@ -203,8 +203,8 @@ def adadqn_static_parser(env_name: str, argvs):
         default=[list(OPTIMIZERS.keys())[4]] * 4,
     )
     parser.add_argument(
-        "-lrs",
-        "--lrs",
+        "-lr_list",
+        "--lr_list",
         nargs="*",
         help="The learning rates for the n_networks Q-networks.",
         type=float,

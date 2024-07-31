@@ -1,6 +1,6 @@
 DISPLAY_NAME = {
     "dqn": "DQN",
-    "adadqn_static": "AdaDQN",
+    "adadqnstatic": "AdaDQN",
     "adadqn": "AdaDQN",
     "rsdqn": "RS DQN",
     "dehbdqn": "DEHB DQN",
