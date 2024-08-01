@@ -1,9 +1,8 @@
 #!/bin/bash
 
-
 for GAME in "BattleZone" "DoubleDunk" "NameThisGame"
 do
-    launch_job/atari/launch_local_adadqnstatic.sh -e lr_1e-5_5e-5_1e-4_BattleZone "-frs 1 -lrs 1 -g \
+    launch_job/atari/launch_cluster_adadqnstatic.sh -e lr_1e-5_5e-5_1e-4_$GAME "-frs 1 -lrs 1 \
         -rb 1_000_000 \
         -bs 32 \
         -n 1 \
