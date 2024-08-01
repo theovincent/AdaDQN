@@ -71,7 +71,7 @@ function parse_arguments() {
                 shift
                 ;;
             -nis | --n_initial_samples)
-                ARGS="$ARGS -n_init $2"
+                ARGS="$ARGS -nis $2"
                 shift
                 shift
                 ;;
@@ -106,7 +106,7 @@ function parse_arguments() {
                 shift
                 ;;
             -lr | --learning_rate)
-                ARGS="$ARGS -learning_rate $2"
+                ARGS="$ARGS -lr $2"
                 shift
                 shift
                 ;;
@@ -117,13 +117,13 @@ function parse_arguments() {
                 ;;
             -fs | --features)
                 shift
-                HIDDEN_LAYER=""
+                FEATURES=""
                 # parse all the layers till next flag encountered
                 while [[ $1 != -* && $# -gt 0 ]]; do
-                    HIDDEN_LAYER="$HIDDEN_LAYER $1"
+                    FEATURES="$FEATURES $1"
                     shift
                 done
-                ARGS="$ARGS --features $HIDDEN_LAYER"
+                ARGS="$ARGS -fs $FEATURES"
                 ;;
             -as | --activations)
                 shift

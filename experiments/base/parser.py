@@ -28,7 +28,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--replay_capacity",
         help="Replay Buffer capacity.",
         type=int,
-        default=1_000_000,
+        default=200_000,
     )
 
     parser.add_argument(
@@ -60,14 +60,14 @@ def base_parser(parser: argparse.ArgumentParser):
         "--horizon",
         help="Horizon for truncation.",
         type=int,
-        default=27_000,
+        default=1_000,
     )
     parser.add_argument(
         "-utd",
         "--update_to_data",
         help="No. of data points to collect per online Q-network update.",
         type=int,
-        default=4,
+        default=1,
     )
 
     parser.add_argument(
@@ -75,7 +75,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--target_update_frequency",
         help="Update period for target Q-network.",
         type=int,
-        default=8_000,
+        default=200,
     )
 
     parser.add_argument(
@@ -83,7 +83,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_initial_samples",
         help="No. of initial samples before training begins.",
         type=int,
-        default=20_000,
+        default=1_000,
     )
 
     parser.add_argument(
@@ -99,7 +99,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--duration_epsilon",
         help="Duration(number of steps) over which epsilon decays.",
         type=float,
-        default=250_000,
+        default=1_000,
     )
 
     parser.add_argument(
@@ -107,7 +107,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_epochs",
         help="No. of epochs to train for.",
         type=int,
-        default=40,
+        default=50,
     )
 
     parser.add_argument(
@@ -115,7 +115,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_training_steps_per_epoch",
         help="Max. no. of training steps per epoch.",
         type=int,
-        default=250_000,
+        default=10_000,
     )
 
 
@@ -141,7 +141,7 @@ def dqn_parser(env_name: str, argvs):
         "--learning_rate",
         help="Learning rate.",
         type=float,
-        default=6.25e-5,
+        default=1e-3,
     )
     parser.add_argument(
         "-l",
@@ -155,7 +155,7 @@ def dqn_parser(env_name: str, argvs):
         "-fs",
         "--features",
         nargs="*",
-        help="Hidden layers.",
+        help="Features.",
         type=int,
         default=[32, 64, 64, 512],
     )
@@ -165,7 +165,6 @@ def dqn_parser(env_name: str, argvs):
         nargs="*",
         help="Activation functions.",
         type=str,
-        choices=list(ACTIVATIONS.keys()),
         default=[list(ACTIVATIONS.keys())[9]] * 4,
     )
 
@@ -208,7 +207,7 @@ def adadqnstatic_parser(env_name: str, argvs):
         default=[list(OPTIMIZERS.keys())[4]] * 4,
     )
     parser.add_argument(
-        "-lrl",
+        "-lrsl",
         "--learning_rates_list",
         nargs="*",
         help="The list of the learning rates for the n_networks Q-networks.",
@@ -258,6 +257,14 @@ def adadqnstatic_parser(env_name: str, argvs):
         os.path.dirname(os.path.abspath(__file__)),
         f"../{env_name}/exp_output/{p['experiment_name']}/{p['algo']}",
     )
+    assert (
+        p["n_networks"]
+        == len(p["optimizers_list"])
+        == len(p["learning_rates_list"])
+        == len(p["losses_list"])
+        == len(p["features_list"])
+        == len(p["activations_list"])
+    ), f"{p['n_networks']} are asked but the lenghts of the lists are not consistant."
 
     return p
 

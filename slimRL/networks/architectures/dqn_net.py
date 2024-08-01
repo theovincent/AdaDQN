@@ -32,5 +32,5 @@ class DQNNet(nn.Module):
 
         for idx_layer in self.range_idx_mlp_layers:
             x = self.activations[idx_layer](nn.Dense(self.features[idx_layer], kernel_init=initializer)(x))
-        x = nn.Dense(self.n_actions, kernel_init=initializer)(x)
-        return x
+
+        return nn.Dense(self.n_actions, kernel_init=initializer)(x)

@@ -1,11 +1,12 @@
 import os
 import sys
+import json
 import jax
 import numpy as np
-from experiments.base.parser import dqn_parser
+from experiments.base.parser import adadqnstatic_parser
 from slimRL.environments.atari import AtariEnv
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
-from slimRL.networks.dqn import DQN
+from slimRL.networks.adadqnstatic import AdaDQNStatic
 from experiments.base.dqn import train
 from experiments.base.utils import prepare_logs
 
@@ -14,7 +15,7 @@ from slimRL.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
 
 def run(argvs=sys.argv[1:]):
     env_name = os.path.abspath(__file__).split(os.sep)[-2]
-    p = dqn_parser(env_name, argvs)
+    p = adadqnstatic_parser(env_name, argvs)
 
     prepare_logs(p)
 
@@ -33,19 +34,38 @@ def run(argvs=sys.argv[1:]):
         action_dtype=np.int32,
         reward_dtype=np.float32,
     )
-    agent = DQN(
+    agent = AdaDQNStatic(
         q_key,
         (env.state_height, env.state_width, env.n_stacked_frames),
         env.n_actions,
-        optimizer=OPTIMIZERS[p["optimizer"]],
-        learning_rate=p["learning_rate"],
-        loss=LOSSES[p["loss"]],
-        features=p["features"],
-        activations=[ACTIVATIONS[key] for key in p["activations"]],
+        n_networks=p["n_networks"],
+        optimizers_list=[OPTIMIZERS[key] for key in p["optimizers_list"]],
+        learning_rates_list=p["learning_rates_list"],
+        losses_list=[LOSSES[key] for key in p["losses_list"]],
+        features_list=p["features_list"],
+        activations_list=[[ACTIVATIONS[key] for key in list_key] for list_key in p["activations_list"]],
         cnn=True,
         gamma=p["gamma"],
         update_horizon=p["update_horizon"],
         update_to_data=p["update_to_data"],
         target_update_frequency=p["target_update_frequency"],
+        end_online_exp=p["end_online_exp"],
+        duration_online_exp=p["n_epochs"] * p["n_training_steps_per_epoch"],
     )
     train(train_key, p, agent, env, rb)
+
+    # Save extra data
+    os.makedirs(os.path.join(p["save_path"], "indices_and_hyperparameters_details"), exist_ok=True)
+    indices_and_hyperparameters_details_path = os.path.join(
+        p["save_path"], f"indices_and_hyperparameters_details/{p['seed']}.json"
+    )
+
+    json.dump(
+        {
+            **jax.tree_map(
+                int, {"compute_target": agent.indices_compute_target, "draw_action": agent.indices_draw_action}
+            )
+        },
+        open(indices_and_hyperparameters_details_path, "w"),
+        indent=4,
+    )
