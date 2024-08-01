@@ -57,7 +57,7 @@ class AtariEnv:
         reward = 0
 
         for idx_frame in range(self.n_skipped_frames):
-            _, reward_, terminal, _ = self.env.step(action)
+            _, reward_, terminal, _, _ = self.env.step(action)
 
             reward += reward_
 
@@ -73,7 +73,7 @@ class AtariEnv:
 
         self.n_steps += 1
 
-        return reward, terminal, _
+        return reward, terminal
 
     def pool_and_resize(self) -> np.ndarray:
         np.maximum(self.screen_buffer[0], self.screen_buffer[1], out=self.screen_buffer[0])

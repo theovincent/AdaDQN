@@ -16,8 +16,7 @@ def train(
     epsilon_schedule = optax.linear_schedule(1.0, p["end_epsilon"], p["duration_epsilon"])
 
     n_training_steps = 0
-    key, reset_key = jax.random.split(key)
-    env.reset(key=reset_key)
+    env.reset()
     episode_returns_per_epoch = [[0]]
     episode_lengths_per_epoch = [[0]]
 

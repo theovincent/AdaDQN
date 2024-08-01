@@ -8,6 +8,10 @@ class LunarLander:
         self.observation_shape = self.env.observation_space.shape
         self.n_actions = self.env.action_space.n
 
+    @property
+    def observation(self) -> np.ndarray:
+        return np.copy(self.state)
+
     def reset(self, key=None):
         if key is None:
             state, _ = self.env.reset()

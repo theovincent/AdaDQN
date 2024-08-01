@@ -32,7 +32,7 @@ pip install -e .
 
 If you are using GPU, run:\
 `
-pip install -U "jax[cuda12]"
+pip install -U "jax[cuda12]==0.4.30"
 `
 
 To verify that everything is working correctly, run the tests as:\

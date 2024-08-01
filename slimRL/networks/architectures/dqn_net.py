@@ -1,6 +1,7 @@
 from typing import Sequence, Callable
 import jax.numpy as jnp
 import flax.linen as nn
+import jax
 
 
 class DQNNet(nn.Module):
@@ -18,15 +19,16 @@ class DQNNet(nn.Module):
 
         if self.cnn:
             x = nn.Conv(features=self.features[0], kernel_size=(8, 8), strides=(4, 4), kernel_init=initializer)(
-                x / 255.0
+                jnp.array(x, ndmin=4) / 255.0
             )
             x = self.activations[0](x)
             x = nn.Conv(features=self.features[1], kernel_size=(4, 4), strides=(2, 2), kernel_init=initializer)(x)
             x = self.activations[1](x)
             x = nn.Conv(features=self.features[2], kernel_size=(3, 3), strides=(1, 1), kernel_init=initializer)(x)
-            x = self.activations[2](x).flatten()
-        else:
-            x = jnp.squeeze(x)
+            x = self.activations[2](x)
+            x = x.reshape((x.shape[0], -1))
+
+        x = jnp.squeeze(x)
 
         for idx_layer in self.range_idx_mlp_layers:
             x = self.activations[idx_layer](nn.Dense(self.features[idx_layer], kernel_init=initializer)(x))

@@ -5,4 +5,5 @@ DISPLAY_NAME = {
     "rsdqn": "RS DQN",
     "dehbdqn": "DEHB DQN",
     "lunar_lander": "Lunar Lander",
+    "atari": "Atari",
 }

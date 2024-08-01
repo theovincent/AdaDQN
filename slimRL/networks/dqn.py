@@ -22,15 +22,15 @@ class DQN(SingleDQN):
         update_to_data: int,
         target_update_frequency: int,
     ):
+        print(
+            f"Start training with: {optimizer.__name__}, lr = {learning_rate}, {loss.__name__}, features = {features} and {[activation.__name__ for activation in activations]}.",
+            flush=True,
+        )
+
         self.hyperparameters_fn = {}
 
         optimizer = optimizer(learning_rate)
         self.hyperparameters_fn["optimizer_fn"] = jax.jit(optimizer.update)
-
-        print(
-            f"Start training with: {optimizer}, lr = {learning_rate}, {loss}, features = {features} and {activations}.",
-            flush=True,
-        )
 
         q = BaseDQN(n_actions, features, activations, cnn, loss)
 

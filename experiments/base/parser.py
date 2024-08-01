@@ -28,7 +28,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--replay_capacity",
         help="Replay Buffer capacity.",
         type=int,
-        default=200_000,
+        default=1_000_000,
     )
 
     parser.add_argument(
@@ -60,14 +60,14 @@ def base_parser(parser: argparse.ArgumentParser):
         "--horizon",
         help="Horizon for truncation.",
         type=int,
-        default=1000,
+        default=27_000,
     )
     parser.add_argument(
         "-utd",
         "--update_to_data",
         help="No. of data points to collect per online Q-network update.",
         type=int,
-        default=1,
+        default=4,
     )
 
     parser.add_argument(
@@ -75,7 +75,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--target_update_frequency",
         help="Update period for target Q-network.",
         type=int,
-        default=500,
+        default=8_000,
     )
 
     parser.add_argument(
@@ -83,7 +83,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_initial_samples",
         help="No. of initial samples before training begins.",
         type=int,
-        default=1000,
+        default=20_000,
     )
 
     parser.add_argument(
@@ -99,7 +99,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--duration_epsilon",
         help="Duration(number of steps) over which epsilon decays.",
         type=float,
-        default=1_000,
+        default=250_000,
     )
 
     parser.add_argument(
@@ -107,7 +107,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_epochs",
         help="No. of epochs to train for.",
         type=int,
-        default=30,
+        default=40,
     )
 
     parser.add_argument(
@@ -115,7 +115,7 @@ def base_parser(parser: argparse.ArgumentParser):
         "--n_training_steps_per_epoch",
         help="Max. no. of training steps per epoch.",
         type=int,
-        default=10_000,
+        default=250_000,
     )
 
 
@@ -139,10 +139,9 @@ def dqn_parser(env_name: str, argvs):
     parser.add_argument(
         "-lr",
         "--learning_rate",
-        nargs=2,
         help="Learning rate.",
         type=float,
-        default=1e-3,
+        default=6.25e-5,
     )
     parser.add_argument(
         "-l",
@@ -158,7 +157,7 @@ def dqn_parser(env_name: str, argvs):
         nargs="*",
         help="Hidden layers.",
         type=int,
-        default=[200, 200],
+        default=[32, 64, 64, 512],
     )
     parser.add_argument(
         "-as",
@@ -167,7 +166,7 @@ def dqn_parser(env_name: str, argvs):
         help="Activation functions.",
         type=str,
         choices=list(ACTIVATIONS.keys()),
-        default=[list(ACTIVATIONS.keys())[9]] * 2,
+        default=[list(ACTIVATIONS.keys())[9]] * 4,
     )
 
     args = parser.parse_args(argvs)
