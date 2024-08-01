@@ -30,6 +30,9 @@ def train(
                 exploration_key, env, agent, rb, p, epsilon_schedule, n_training_steps
             )
 
+            idx_training_step += 1
+            n_training_steps += 1
+
             episode_returns_per_epoch[idx_epoch][-1] += reward
             episode_lengths_per_epoch[idx_epoch][-1] += 1
             if has_reset and idx_training_step < p["n_training_steps_per_epoch"]:
@@ -39,9 +42,6 @@ def train(
             if n_training_steps > p["n_initial_samples"]:
                 agent.update_online_params(n_training_steps, rb)
                 agent.update_target_params(n_training_steps)
-
-            idx_training_step += 1
-            n_training_steps += 1
 
         print(
             f"\nEpoch: {idx_epoch}"

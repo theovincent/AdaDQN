@@ -1,3 +1,4 @@
+from functools import partial
 import optax
 import jax.numpy as jnp
 import flax.linen as nn
@@ -29,7 +30,7 @@ OPTIMIZERS = {
     "adadelta": optax.adadelta,
     "adagrad": optax.adagrad,
     "adafactor": optax.adafactor,
-    "adam": optax.adam,
+    "adam": partial(optax.adam, eps=1.5e-4),
     "adamax": optax.adamax,
     "adamaxw": optax.adamaxw,
     "adamw": optax.adamw,
