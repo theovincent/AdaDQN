@@ -79,7 +79,7 @@ def base_parser(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
-        "-n_init",
+        "-nis",
         "--n_initial_samples",
         help="No. of initial samples before training begins.",
         type=int,
@@ -121,7 +121,10 @@ def base_parser(parser: argparse.ArgumentParser):
 
 def dqn_parser(env_name: str, argvs):
     algo_name = "dqn"
-    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    print(
+        f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---",
+        flush=True,
+    )
     parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
 
     base_parser(parser)
@@ -135,7 +138,7 @@ def dqn_parser(env_name: str, argvs):
     )
     parser.add_argument(
         "-lr",
-        "--lr",
+        "--learning_rate",
         nargs=2,
         help="Learning rate.",
         type=float,
@@ -150,8 +153,8 @@ def dqn_parser(env_name: str, argvs):
         default=list(LOSSES.keys())[2],
     )
     parser.add_argument(
-        "-hl",
-        "--hidden_layers",
+        "-fs",
+        "--features",
         nargs="*",
         help="Hidden layers.",
         type=int,
@@ -182,7 +185,10 @@ def dqn_parser(env_name: str, argvs):
 
 def adadqnstatic_parser(env_name: str, argvs):
     algo_name = "adadqnstatic"
-    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    print(
+        f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---",
+        flush=True,
+    )
     parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
 
     base_parser(parser)
@@ -194,44 +200,44 @@ def adadqnstatic_parser(env_name: str, argvs):
         default=4,
     )
     parser.add_argument(
-        "-os",
-        "--optimizers",
+        "-osl",
+        "--optimizers_list",
         nargs="*",
-        help="The optimizers for the n_networks Q-networks.",
+        help="The list of the optimizers for the n_networks Q-networks.",
         type=str,
         choices=list(OPTIMIZERS.keys()),
         default=[list(OPTIMIZERS.keys())[4]] * 4,
     )
     parser.add_argument(
-        "-lr_list",
-        "--lr_list",
+        "-lrl",
+        "--learning_rates_list",
         nargs="*",
-        help="The learning rates for the n_networks Q-networks.",
+        help="The list of the learning rates for the n_networks Q-networks.",
         type=float,
         default=[1e-3] * 4,
     )
     parser.add_argument(
-        "-ls",
-        "--losses",
+        "-lsl",
+        "--losses_list",
         nargs="*",
-        help="The losses for the n_networks Q-networks.",
+        help="The list of the losses for the n_networks Q-networks.",
         type=str,
         choices=list(LOSSES.keys()),
         default=[list(LOSSES.keys())[2]] * 4,
     )
     parser.add_argument(
-        "-hls",
-        "--hidden_layers",
+        "-fsl",
+        "--features_list",
         nargs="*",
-        help="The hidden layers for the n_networks Q-networks. Seperate the elements by a comma.",
+        help="The list of features for the n_networks Q-networks. Seperate the elements by a comma.",
         type=str,
         default=["200,200"] * 4,
     )
     parser.add_argument(
-        "-as",
-        "--activations",
+        "-asl",
+        "--activations_list",
         nargs="*",
-        help="The activation functions for the n_networks Q-networks. Seperate the elements by a comma.",
+        help="The list of activation functions for the n_networks Q-networks. Seperate the elements by a comma.",
         type=str,
         default=[f"{list(ACTIVATIONS.keys())[9]},{list(ACTIVATIONS.keys())[9]}"] * 4,
     )
@@ -245,8 +251,8 @@ def adadqnstatic_parser(env_name: str, argvs):
     args = parser.parse_args(argvs)
 
     p = vars(args)
-    p["hidden_layers"] = [list(map(int, hidden_layers.split(","))) for hidden_layers in p["hidden_layers"]]
-    p["activations"] = [activations.split(",") for activations in p["activations"]]
+    p["features_list"] = [list(map(int, features.split(","))) for features in p["features_list"]]
+    p["activations_list"] = [activations.split(",") for activations in p["activations_list"]]
     p["env"] = env_name
     p["algo"] = algo_name
     p["save_path"] = os.path.join(
@@ -269,7 +275,7 @@ def hyperparameter_search_parser(parser: argparse.ArgumentParser):
     )
     parser.add_argument(
         "-lrr",
-        "--lr_range",
+        "--learning_rate_range",
         nargs=2,
         help="Range of the learning rate. It is sample in log space [10^low_range, 10^high_range].",
         type=int,
@@ -313,7 +319,10 @@ def hyperparameter_search_parser(parser: argparse.ArgumentParser):
 
 def adadqn_parser(env_name: str, argvs):
     algo_name = "adadqn"
-    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    print(
+        f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---",
+        flush=True,
+    )
     parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
 
     base_parser(parser)
@@ -361,7 +370,10 @@ def adadqn_parser(env_name: str, argvs):
 
 def rsdqn_parser(env_name: str, argvs):
     algo_name = "rsdqn"
-    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    print(
+        f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---",
+        flush=True,
+    )
     parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
 
     base_parser(parser)
@@ -388,7 +400,10 @@ def rsdqn_parser(env_name: str, argvs):
 
 def dehbdqn_parser(env_name: str, argvs):
     algo_name = "dehbdqn"
-    print(f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---")
+    print(
+        f"--- Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]} {time.strftime('%d-%m-%Y %H:%M:%S')}---",
+        flush=True,
+    )
     parser = argparse.ArgumentParser(f"Train {DISPLAY_NAME[algo_name]} on {DISPLAY_NAME[env_name]}.")
 
     base_parser(parser)

@@ -14,8 +14,9 @@ class DQN(SingleDQN):
         optimizer: Callable,
         learning_rate: float,
         loss: Callable,
-        hidden_layers: Tuple[int],
+        features: Tuple[int],
         activations: List[Callable],
+        cnn: bool,
         gamma: float,
         update_horizon: int,
         update_to_data: int,
@@ -26,7 +27,12 @@ class DQN(SingleDQN):
         optimizer = optimizer(learning_rate)
         self.hyperparameters_fn["optimizer_fn"] = jax.jit(optimizer.update)
 
-        q = BaseDQN(n_actions, hidden_layers, activations, loss)
+        print(
+            f"Start training with: {optimizer}, lr = {learning_rate}, {loss}, features = {features} and {activations}.",
+            flush=True,
+        )
+
+        q = BaseDQN(n_actions, features, activations, cnn, loss)
 
         self.hyperparameters_fn["apply_fn"] = q.apply
         self.hyperparameters_fn["grad_and_loss_fn"] = q.value_and_grad

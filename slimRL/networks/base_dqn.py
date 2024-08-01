@@ -10,8 +10,8 @@ from slimRL.networks import IDX_RB
 
 
 class BaseDQN:
-    def __init__(self, n_actions: int, hidden_layers: list, activations: List, loss: Callable):
-        self.q_network = DQNNet(hidden_layers, activations, n_actions)
+    def __init__(self, n_actions: int, features: list, activations: List, cnn: bool, loss: Callable):
+        self.q_network = DQNNet(features, activations, n_actions, cnn)
         self.loss = loss
 
     @partial(jax.jit, static_argnames="self")

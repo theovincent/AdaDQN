@@ -13,11 +13,12 @@ class RandomGenerator:
         observation_dim,
         n_actions,
         optimizers: List[Callable],
-        lr_range: Tuple,
+        learning_rate_range: Tuple,
         losses: List[Callable],
         n_layers_range: Tuple,
         n_neurons_range: Tuple,
         activations: List[Callable],
+        cnn: bool,
         optimizer_change_probability: float,
         architecture_change_probability: float,
     ) -> None:
@@ -25,11 +26,12 @@ class RandomGenerator:
         self.n_actions = n_actions
 
         self.optimizers = optimizers
-        self.lr_range = lr_range
+        self.learning_rate_range = learning_rate_range
         self.losses = losses
         self.n_layers_range = n_layers_range
         self.n_neurons_range = n_neurons_range
         self.activations = activations
+        self.cnn = cnn
 
         self.optimizer_change_probability = optimizer_change_probability
         self.architecture_change_probability = architecture_change_probability
@@ -69,7 +71,7 @@ class RandomGenerator:
             if change_architecture:
                 neurons_key, activation_key, init_key = jax.random.split(key, 3)
                 hyperparameters_fn["architecture_hps"]["idx_loss"] = idx_loss
-                hyperparameters_fn["architecture_hps"]["hidden_layers"] = list(
+                hyperparameters_fn["architecture_hps"]["features"] = list(
                     jax.random.randint(
                         neurons_key,
                         (n_layers,),
@@ -83,8 +85,9 @@ class RandomGenerator:
 
                 q = BaseDQN(
                     self.n_actions,
-                    hyperparameters_fn["architecture_hps"]["hidden_layers"],
+                    hyperparameters_fn["architecture_hps"]["features"],
                     [self.activations[idx] for idx in hyperparameters_fn["architecture_hps"]["indices_activations"]],
+                    self.cnn,
                     self.losses[hyperparameters_fn["architecture_hps"]["idx_loss"]],
                 )
 
@@ -129,12 +132,12 @@ class RandomGenerator:
         return change_optimizer, optimizer_hps
 
     def generate_hp_optimizer(self, key, optimizer_hps):
-        idx_key, lr_key = jax.random.split(key)
+        idx_key, learning_rate_key = jax.random.split(key)
 
         optimizer_hps["idx_optimizer"] = jax.random.randint(idx_key, (), minval=0, maxval=len(self.optimizers))
         # sample the learning rate in log space
         optimizer_hps["learning_rate"] = 10 ** jax.random.uniform(
-            lr_key, minval=self.lr_range[0], maxval=self.lr_range[1]
+            learning_rate_key, minval=self.learning_rate_range[0], maxval=self.learning_rate_range[1]
         )
 
         return optimizer_hps
@@ -172,11 +175,12 @@ class DEHBGenerator:
         observation_dim,
         n_actions,
         optimizers: List[Callable],
-        lr_range: Tuple,
+        learning_rate_range: Tuple,
         losses: List[Callable],
         n_layers_range: Tuple,
         n_neurons_range: Tuple,
         activations: List[Callable],
+        cnn: bool,
         min_n_epochs_per_hyperparameter,
         max_n_epochs_per_hyperparameter,
     ) -> None:
@@ -186,6 +190,7 @@ class DEHBGenerator:
         self.optimizers = optimizers
         self.losses = losses
         self.activations = activations
+        self.cnn = cnn
 
         cs = ConfigurationSpace(
             seed=int(key[0]),
@@ -193,7 +198,7 @@ class DEHBGenerator:
                 "idx_optimizer": Integer("idx_optimizer", bounds=(0, len(optimizers) - 1)),
                 "learning_rate": Float(
                     "learning_rate",
-                    bounds=(10 ** lr_range[0], 10 ** lr_range[1]),
+                    bounds=(10 ** learning_rate_range[0], 10 ** learning_rate_range[1]),
                     log=True,
                 ),
                 "idx_loss": Integer("idx_loss", bounds=(0, len(losses) - 1)),
@@ -221,8 +226,8 @@ class DEHBGenerator:
                         "idx_optimizer": hyperparameters_fn["optimizer_hps"]["idx_optimizer"],
                         "learning_rate": hyperparameters_fn["optimizer_hps"]["learning_rate"],
                         "idx_loss": hyperparameters_fn["architecture_hps"]["idx_loss"],
-                        "n_layers": len(hyperparameters_fn["architecture_hps"]["hidden_layers"]),
-                        "n_neurons": hyperparameters_fn["architecture_hps"]["hidden_layers"][0],
+                        "n_layers": len(hyperparameters_fn["architecture_hps"]["features"]),
+                        "n_neurons": hyperparameters_fn["architecture_hps"]["features"][0],
                         "idx_activation": hyperparameters_fn["architecture_hps"]["indices_activations"][0],
                     },
                 ),
@@ -244,7 +249,7 @@ class DEHBGenerator:
             },
             "architecture_hps": {
                 "idx_loss": job_info["config"]["idx_loss"],
-                "hidden_layers": [job_info["config"]["n_neurons"]] * job_info["config"]["n_layers"],
+                "features": [job_info["config"]["n_neurons"]] * job_info["config"]["n_layers"],
                 "indices_activations": [job_info["config"]["idx_activation"]] * job_info["config"]["n_layers"],
             },
             "fidelity": job_info["fidelity"],
@@ -260,8 +265,9 @@ class DEHBGenerator:
 
         q = BaseDQN(
             self.n_actions,
-            hyperparameters_fn["architecture_hps"]["hidden_layers"],
+            hyperparameters_fn["architecture_hps"]["features"],
             [self.activations[idx] for idx in hyperparameters_fn["architecture_hps"]["indices_activations"]],
+            self.cnn,
             self.losses[hyperparameters_fn["architecture_hps"]["idx_loss"]],
         )
 

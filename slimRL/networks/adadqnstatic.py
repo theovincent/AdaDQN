@@ -18,11 +18,12 @@ class AdaDQNStatic:
         observation_dim,
         n_actions,
         n_networks,
-        optimizers: List[Callable],
-        learning_rates: Tuple[int],
-        losses: List[str],
-        hidden_layers: Tuple[Tuple[int]],
-        activations: List[Callable],
+        optimizers_list: List[Callable],
+        learning_rates_list: Tuple[int],
+        losses_list: List[str],
+        features_list: Tuple[Tuple[int]],
+        activations_list: List[Callable],
+        cnn: bool,
         gamma: float,
         update_horizon: int,
         update_to_data: int,
@@ -38,10 +39,10 @@ class AdaDQNStatic:
         for idx_net in range(self.n_networks):
             hyperparameters_fn = {}
 
-            optimizer = optimizers[idx_net](learning_rates[idx_net])
+            optimizer = optimizers_list[idx_net](learning_rates_list[idx_net])
             hyperparameters_fn["optimizer_fn"] = jax.jit(optimizer.update)
 
-            q = BaseDQN(n_actions, hidden_layers[idx_net], activations[idx_net], losses[idx_net])
+            q = BaseDQN(n_actions, features_list[idx_net], activations_list[idx_net], cnn, losses_list[idx_net])
 
             hyperparameters_fn["apply_fn"] = q.apply
             hyperparameters_fn["grad_and_loss_fn"] = q.value_and_grad

@@ -70,7 +70,7 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
-            -n_init | --n_initial_samples)
+            -nis | --n_initial_samples)
                 ARGS="$ARGS -n_init $2"
                 shift
                 shift
@@ -105,8 +105,8 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
-            -lr | --lr)
-                ARGS="$ARGS -lr $2"
+            -lr | --learning_rate)
+                ARGS="$ARGS -learning_rate $2"
                 shift
                 shift
                 ;;
@@ -115,7 +115,7 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
-            -hl | -hls | --hidden_layers)
+            -fs | --features)
                 shift
                 HIDDEN_LAYER=""
                 # parse all the layers till next flag encountered
@@ -123,18 +123,78 @@ function parse_arguments() {
                     HIDDEN_LAYER="$HIDDEN_LAYER $1"
                     shift
                 done
-                ARGS="$ARGS --hidden_layers $HIDDEN_LAYER"
+                ARGS="$ARGS --features $HIDDEN_LAYER"
                 ;;
-            # adadqnstatic specific
-            -lr_list | --lr_list)
+            -as | --activations)
                 shift
-                LEARNING_RATES=""
+                ACTIVATIONS=""
                 # parse all the layers till next flag encountered
                 while [[ $1 != -* && $# -gt 0 ]]; do
-                    LEARNING_RATES="$LEARNING_RATES $1"
+                    ACTIVATIONS="$ACTIVATIONS $1"
                     shift
                 done
-                ARGS="$ARGS -lr_list $LEARNING_RATES"
+                ARGS="$ARGS -as $ACTIVATIONS"
+                ;;
+            # adadqnstatic specific
+            -nn | --n_networks)
+                ARGS="$ARGS -nn $2"
+                shift
+                shift
+                ;;
+            -osl | --optimizers_list)
+                shift
+                OPTIMIZERS_LIST=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    OPTIMIZERS_LIST="$OPTIMIZERS_LIST $1"
+                    shift
+                done
+                ARGS="$ARGS -osl $OPTIMIZERS_LIST"
+                ;;
+            -lrsl | --learning_rates_list)
+                shift
+                LEARNING_RATES_LIST=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    LEARNING_RATES_LIST="$LEARNING_RATES_LIST $1"
+                    shift
+                done
+                ARGS="$ARGS -lrsl $LEARNING_RATES_LIST"
+                ;;
+            -lsl | --losses_list)
+                shift
+                LOSSES_LIST=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    LOSSES_LIST="$LOSSES_LIST $1"
+                    shift
+                done
+                ARGS="$ARGS -lsl $LOSSES_LIST"
+                ;;
+            -fsl | --features_list)
+                shift
+                FEATURES_LIST=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    FEATURES_LIST="$FEATURES_LIST $1"
+                    shift
+                done
+                ARGS="$ARGS -fsl $FEATURES_LIST"
+                ;;
+            -asl | --activations_list)
+                shift
+                ACTIVATIONS_LIST=""
+                # parse all the layers till next flag encountered
+                while [[ $1 != -* && $# -gt 0 ]]; do
+                    ACTIVATIONS_LIST="$ACTIVATIONS_LIST $1"
+                    shift
+                done
+                ARGS="$ARGS -asl $ACTIVATIONS_LIST"
+                ;;
+            -eoe | --end_online_exp)
+                ARGS="$ARGS -eoe $2"
+                shift
+                shift
                 ;;
             # Hyperparameter search specific
             -os | --optimizers)
@@ -147,7 +207,7 @@ function parse_arguments() {
                 done
                 ARGS="$ARGS -os $OPTIMIZERS"
                 ;;
-            -lrr | --lr_range)
+            -lrr | --learning_rate_range)
                 ARGS="$ARGS -lrr $2 $3"
                 shift
                 shift
@@ -175,27 +235,7 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
-            -as | --activations)
-                shift
-                ACTIVATIONS=""
-                # parse all the layers till next flag encountered
-                while [[ $1 != -* && $# -gt 0 ]]; do
-                    ACTIVATIONS="$ACTIVATIONS $1"
-                    shift
-                done
-                ARGS="$ARGS -as $ACTIVATIONS"
-                ;;
             # adadqn specific
-            -nn | --n_networks)
-                ARGS="$ARGS -nn $2"
-                shift
-                shift
-                ;;
-            -eoe | --end_online_exp)
-                ARGS="$ARGS -eoe $2"
-                shift
-                shift
-                ;;
             -ocp | --optimizer_change_probability)
                 ARGS="$ARGS -ocp $2"
                 shift

@@ -41,18 +41,18 @@ def run(argvs=sys.argv[1:]):
     model = pickle_load(args.model)
     if "idx_compute_target" in model.keys():
         model = model[f"model_{model['idx_compute_target']}"]
-        model["hidden_layers"] = model["details"]
-    q_network = DQNNet(model["hidden_layers"], env.n_actions)
+        model["features"] = model["details"]
+    q_network = DQNNet(model["features"], env.n_actions)
 
     env.reset()
     total_reward = 0
     for _ in range(args.steps):
         env.env.render()
         action = jnp.argmax(q_network.apply(model["params"], env.state)).item()
-        _, reward, termination = env.step(action)
+        reward, termination = env.step(action)
         total_reward += reward
 
         if termination or env.n_steps > args.horizon:
-            print("Total reward = ", total_reward)
+            print("Total reward = ", total_reward, flush=True)
             total_reward = 0
             env.reset()

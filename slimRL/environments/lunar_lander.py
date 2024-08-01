@@ -23,4 +23,4 @@ class LunarLander:
         self.n_steps += 1
         self.state, reward, absorbing, _, _ = self.env.step(action)
 
-        return self.state, reward, absorbing
+        return reward, absorbing

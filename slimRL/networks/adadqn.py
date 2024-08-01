@@ -8,6 +8,8 @@ import numpy as np
 from slimRL.networks.hyperparameter_generator import RandomGenerator
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 
+from slimRL.networks import IDX_RB
+
 
 class AdaDQN:
     def __init__(
@@ -17,11 +19,12 @@ class AdaDQN:
         n_actions,
         n_networks,
         optimizers: List[Callable],
-        lr_range: Tuple[int],
+        learning_rate_range: Tuple[int],
         losses: List[Callable],
         n_layers_range: Tuple[int],
         n_neurons_range: Tuple[int],
         activations: List[Callable],
+        cnn: bool,
         gamma: float,
         update_horizon: int,
         update_to_data: int,
@@ -37,11 +40,12 @@ class AdaDQN:
             observation_dim,
             n_actions,
             optimizers,
-            lr_range,
+            learning_rate_range,
             losses,
             n_layers_range,
             n_neurons_range,
             activations,
+            cnn,
             optimizer_change_probability,
             architecture_change_probability,
         )
@@ -145,7 +149,7 @@ class AdaDQN:
         losses = np.zeros(self.n_networks)
 
         value_next_states = self.hyperparameters_fn[self.idx_compute_target]["apply_fn"](
-            self.target_params, batch_samples["next_observations"]
+            self.target_params, batch_samples[IDX_RB["next_state"]]
         )
         targets = self.compute_target_from_values(value_next_states, batch_samples)
 
@@ -165,9 +169,9 @@ class AdaDQN:
     @partial(jax.jit, static_argnames="self")
     def compute_target_from_values(self, value_next_states, batch_samples):
         # computes the target value for single or a batch of samples
-        return batch_samples["rewards"] + (1 - batch_samples["dones"]) * self.gamma**self.update_horizon * jnp.max(
-            value_next_states, axis=-1
-        )
+        return batch_samples[IDX_RB["reward"]] + (
+            1 - batch_samples[IDX_RB["terminal"]]
+        ) * self.gamma**self.update_horizon * jnp.max(value_next_states, axis=-1)
 
     def best_action(self, params: FrozenDict, state: jnp.ndarray):
         # computes the best action for a single state

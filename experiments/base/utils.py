@@ -20,11 +20,19 @@ SHARED_PARAMS = [
     "n_training_steps_per_epoch",
 ]
 
-HP_SEARCH_PARAMS = ["optimizers", "lr_range", "losses", "n_layers_range", "n_neurons_range", "activations"]
+HP_SEARCH_PARAMS = ["optimizers", "learning_rate_range", "losses", "n_layers_range", "n_neurons_range", "activations"]
 
 AGENT_PARAMS = {
-    "dqn": ["optimizer", "lr", "loss", "hidden_layers", "activations"],
-    "adadqnstatic": ["n_networks", "optimizers", "lr_list", "losses", "hidden_layers", "activations", "end_online_exp"],
+    "dqn": ["optimizer", "learning_rate", "loss", "features", "activations"],
+    "adadqnstatic": [
+        "n_networks",
+        "activations_list",
+        "learning_rates_list",
+        "losses_list",
+        "features_list",
+        "activations_list",
+        "end_online_exp",
+    ],
     "adadqn": HP_SEARCH_PARAMS
     + ["n_networks", "end_online_exp", "optimizer_change_probability", "architecture_change_probability"],
     "rsdqn": HP_SEARCH_PARAMS + ["n_epochs_per_hyperparameter"],
