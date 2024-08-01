@@ -28,6 +28,7 @@ def run(argvs=sys.argv[1:]):
         batch_size=p["batch_size"],
         update_horizon=p["update_horizon"],
         gamma=p["gamma"],
+        clipping=lambda x: x,
         stack_size=1,
         observation_dtype=np.float32,
         terminal_dtype=np.uint8,

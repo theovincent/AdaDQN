@@ -90,7 +90,7 @@ class ReplayBuffer(object):
         batch_size,
         update_horizon,
         gamma,
-        clipping=lambda x: x,
+        clipping,
         stack_size=4,
         max_sample_attempts=1000,
         extra_storage_types=None,
