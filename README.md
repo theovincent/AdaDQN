@@ -49,6 +49,11 @@ pip install -r requirements.txt
 pip install --upgrade "jax[cuda12_pip]==0.4.30" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ```
 
+You might need to run
+```bash 
+pip install swig
+```
+before installing the other dependencies.
 
 To verify that everything is working correctly, run the tests as:\
 `
