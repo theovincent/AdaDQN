@@ -24,16 +24,31 @@ Let's dive in!
 ## User installation
 In the folder where the code is, run the following commands to complete installation:
 ```bash
-python3 -m venv env
-source env/bin/activate
+python3 -m venv env_cpu
+source env_cpu/bin/activate
 pip install --upgrade pip setuptools wheel
 pip install -e .
 ```
 
-If you are using GPU, run:\
-`
+If you are using GPU, run:
+```bash
+python3 -m venv env_gpu
+source env_gpu/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install -e .
 pip install -U "jax[cuda12]==0.4.30"
-`
+```
+
+If any error occurs, run
+```bash
+python3 -m venv env_gpu
+source env_gpu/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install -e .
+pip install -r requirements.txt
+pip install --upgrade "jax[cuda12_pip]==0.4.30" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+```
+
 
 To verify that everything is working correctly, run the tests as:\
 `
