@@ -48,12 +48,17 @@ pip install -e .
 pip install -r requirements.txt
 pip install --upgrade "jax[cuda12_pip]==0.4.30" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 ```
-
 You might need to run
 ```bash 
 pip install swig
 ```
 before installing the other dependencies.
+
+For local runs, you migh need to run:
+```bash
+conda install conda-forge::tmux
+```
+
 
 To verify that everything is working correctly, run the tests as:\
 `
