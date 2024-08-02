@@ -35,6 +35,11 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
+            -nps | --n_parallel_seeds)
+                N_PARALLEL_SEEDS=$2
+                shift
+                shift
+                ;;
             -rb | --replay_capacity)
                 ARGS="$ARGS -rb $2"
                 shift
