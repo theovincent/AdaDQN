@@ -4,7 +4,7 @@ for GAME in "BattleZone" "DoubleDunk" "NameThisGame"
 do
     for HP in "1e-5" "5e-5" "1e-4"
     do
-        echo launch_job/atari/launch_cluster_dqn.sh -e lr_$HP\_$GAME "-frs 1 -lrs 5 \
+        launch_job/atari/launch_cluster_dqn.sh -e lr_$HP\_$GAME "-frs 1 -lrs 5 \
             -rb 1_000_000 \
             -bs 32 \
             -n 1 \
