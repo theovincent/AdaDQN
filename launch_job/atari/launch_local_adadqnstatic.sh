@@ -10,6 +10,7 @@ fi
 if [[ $GPU = true ]]
 then
     tmux send-keys -t slimRL "source env_gpu/bin/activate" ENTER
+    tmux send-keys -t slimRL "export XLA_PYTHON_CLIENT_MEM_FRACTION=0.3" ENTER
 else
     tmux send-keys -t slimRL "source env_cpu/bin/activate" ENTER
 fi
