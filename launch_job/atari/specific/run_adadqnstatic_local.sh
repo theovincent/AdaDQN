@@ -1,9 +1,9 @@
 #!/bin/bash
 
 
-for GAME in "DoubleDunk" # "BattleZone" "DoubleDunk" "NameThisGame"
+for GAME in "NameThisGame" # "BattleZone" "DoubleDunk" "NameThisGame"
 do
-    launch_job/atari/launch_local_adadqnstatic.sh -e lr_1e-5_5e-5_1e-4_$GAME "-frs 1 -lrs 2 -g \
+    launch_job/atari/launch_local_adadqnstatic.sh -e architecture_44_52_64_512__32_64_64_512__46_46_46_714_$GAME "-frs 1 -lrs 2 -g \
         -rb 1_000_000 \
         -bs 32 \
         -n 1 \
@@ -18,9 +18,9 @@ do
         -spe 250_000 \
         -nn 3 \
         -osl adam adam adam \
-        -lrsl 1e-5 5e-5 1e-4 \
+        -lrsl 5e-5 5e-5 5e-5 \
         -lsl l2 l2 l2 \
-        -fsl 32,64,64,512 32,64,64,512 32,64,64,512 \
+        -fsl 44,52,64,512 32,64,64,512 46,46,46,714 \
         -asl relu,relu,relu,relu relu,relu,relu,relu relu,relu,relu,relu \
         -eoe 0.01"
 done
