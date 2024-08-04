@@ -11,9 +11,16 @@ NAMES = {
     "learning_rate": {
         "name": "On-The-Fly learning rate selection on Atari",
         "lr_1e-5_5e-5_1e-4_*/adadqnstatic": "AdaDQN",
-        "lr_1e-5_*/dqn": "DQN learning rate: 1e-5",
-        "lr_5e-5_*/dqn": "DQN learning rate: 5e-5",
-        "lr_1e-4_*/dqn": "DQN learning rate: 1e-4",
+        "lr_1e-5_*/dqn": "DQN lr: 1e-5",
+        "lr_5e-5_*/dqn": "DQN lr: 5e-5",
+        "lr_1e-4_*/dqn": "DQN lr: 1e-4",
+    },
+    "architecture": {
+        "name": "On-The-Fly architecture selection on Atari",
+        "architecture_44_52_64_512__32_64_64_512__46_46_46_714_*/adadqnstatic": "AdaDQN",
+        "architecture_44_52_64_512_*/dqn": "DQN: [44, 52, 64, 512]",
+        "lr_5e-5_*/dqn": "DQN: [32, 64, 64, 512]",
+        "architecture_46_46_46_714_*/dqn": "DQN: [46, 46, 46, 714]",
     },
     "epsilon_adam": {
         "name": "On-The-Fly espilon Adam selection on Atari",
@@ -38,6 +45,12 @@ COLORS = {
         "lr_5e-5_*/dqn": AVAILABLE_COLORS["orange"],
         "lr_1e-4_*/dqn": AVAILABLE_COLORS["brown"],
     },
+    "architecture": {
+        "architecture_44_52_64_512__32_64_64_512__46_46_46_714_*/adadqnstatic": AVAILABLE_COLORS["green"],
+        "architecture_44_52_64_512_*/dqn": AVAILABLE_COLORS["yellow"],
+        "lr_5e-5_*/dqn": AVAILABLE_COLORS["orange"],
+        "architecture_46_46_46_714_*/dqn": AVAILABLE_COLORS["brown"],
+    },
     "epsilon_adam": {
         "architecture_44_52_64_512__32_64_64_512__46_46_46_714_*/adadqnstatic": AVAILABLE_COLORS["green"],
         "architecture_44_52_64_512_*/dqn": AVAILABLE_COLORS["yellow"],
@@ -59,6 +72,12 @@ STYLES = {
         "lr_5e-5_*/dqn": "dashed",
         "lr_1e-4_*/dqn": "dashed",
     },
+    "architecture": {
+        "architecture_44_52_64_512__32_64_64_512__46_46_46_714_*/adadqnstatic": "solid",
+        "architecture_44_52_64_512_*/dqn": "dashed",
+        "lr_5e-5_*/dqn": "dashed",
+        "architecture_46_46_46_714_*/dqn": "dashed",
+    },
     "epsilon_adam": {
         "architecture_44_52_64_512__32_64_64_512__46_46_46_714_*/adadqnstatic": "solid",
         "architecture_44_52_64_512_*/dqn": "dashed",
@@ -79,6 +98,12 @@ ORDERS = {
         "lr_1e-5_*/dqn": 2,
         "lr_5e-5_*/dqn": 3,
         "lr_1e-4_*/dqn": 4,
+    },
+    "architecture": {
+        "architecture_44_52_64_512__32_64_64_512__46_46_46_714_*/adadqnstatic": 5,
+        "architecture_44_52_64_512_*/dqn": 2,
+        "lr_5e-5_*/dqn": 3,
+        "architecture_46_46_46_714_*/dqn": 4,
     },
     "epsilon_adam": {
         "architecture_44_52_64_512__32_64_64_512__46_46_46_714_*/adadqnstatic": 5,
