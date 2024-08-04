@@ -31,6 +31,8 @@ OPTIMIZERS = {
     "adagrad": optax.adagrad,
     "adafactor": optax.adafactor,
     "adam": partial(optax.adam, eps=1.5e-4),
+    "adam_medium_eps": partial(optax.adam, eps=1.5e-6),
+    "adam_small_eps": partial(optax.adam, eps=1.5e-8),
     "adamax": optax.adamax,
     "adamaxw": optax.adamaxw,
     "adamw": optax.adamw,

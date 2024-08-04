@@ -3,7 +3,7 @@
 
 for GAME in "NameThisGame" # "BattleZone" "DoubleDunk" "NameThisGame"
 do
-    launch_job/atari/launch_local_adadqnstatic.sh -e architecture_44_52_64_512__32_64_64_512__46_46_46_714_$GAME "-frs 1 -lrs 2 -g \
+    launch_job/atari/launch_local_adadqnstatic.sh -e epsilon_adam_1.5e-8_1.5e-6_1.5e-4_$GAME "-frs 1 -lrs 2 -g \
         -rb 1_000_000 \
         -bs 32 \
         -n 1 \
@@ -17,10 +17,10 @@ do
         -ne 40 \
         -spe 250_000 \
         -nn 3 \
-        -osl adam adam adam \
+        -osl adam_small_eps adam_medium_eps adam \
         -lrsl 5e-5 5e-5 5e-5 \
         -lsl l2 l2 l2 \
-        -fsl 44,52,64,512 32,64,64,512 46,46,46,714 \
+        -fsl 32,64,64,512 32,64,64,512 32,64,64,512 \
         -asl relu,relu,relu,relu relu,relu,relu,relu relu,relu,relu,relu \
         -eoe 0.01"
 done
