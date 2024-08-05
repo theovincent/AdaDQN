@@ -3,7 +3,7 @@
 
 for GAME in "NameThisGame" # "BattleZone" "DoubleDunk" "NameThisGame"
 do
-    launch_job/atari/launch_local_adadqnstatic.sh -e epsilon_adam_1.5e-8_1.5e-6_1.5e-4_$GAME "-frs 1 -lrs 2 -g \
+    launch_job/atari/launch_local_adadqnstatic.sh -e epsilon_adam_small_medium_large_$GAME "-frs 3 -lrs 3 -g \
         -rb 1_000_000 \
         -bs 32 \
         -n 1 \
