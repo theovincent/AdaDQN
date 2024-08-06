@@ -6,7 +6,7 @@ import sys
 import jax
 import numpy as np
 from experiments.base.parser import dqn_parser
-from slimRL.environments.craftax import CraftaxEnv
+from slimRL.environments.craftax_symoblic import CraftaxEnv
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 from slimRL.networks.dqn import DQN
 from experiments.base.dqn import train

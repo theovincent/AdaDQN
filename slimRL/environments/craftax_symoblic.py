@@ -9,6 +9,7 @@ class CraftaxEnv:
 
         self.env = make_craftax_env_from_name("Craftax-Classic-Symbolic-v1", auto_reset=False)
         self.env_step_fn = jax.jit(self.env.step)
+        self.env_reset_fn = jax.jit(self.env.reset)
 
         self.observation_shape = self.env.observation_space(self.env.default_params).shape
         self.n_actions = self.env.action_space().n
@@ -19,7 +20,7 @@ class CraftaxEnv:
 
     def reset(self) -> None:
         self.key, reset_key = jax.random.split(self.key)
-        self.state, self.env_state = self.env.reset(reset_key)
+        self.state, self.env_state = self.env_reset_fn(reset_key)
 
         self.n_steps = 0
 
@@ -27,8 +28,8 @@ class CraftaxEnv:
         self.key, step_key = jax.random.split(self.key)
 
         self.n_steps += 1
-        self.state, self.env_state, reward, absorbing, _ = self.env_step_fn(
+        self.state, self.env_state, reward, absorbing, self.info = self.env_step_fn(
             step_key, self.env_state, action, self.env.default_params
         )
 
-        return reward.item(), absorbing
+        return reward.item(), absorbing.item()

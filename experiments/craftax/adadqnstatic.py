@@ -8,7 +8,7 @@ import json
 import jax
 import numpy as np
 from experiments.base.parser import adadqnstatic_parser
-from slimRL.environments.craftax import CraftaxEnv
+from slimRL.environments.craftax_symoblic import CraftaxEnv
 from slimRL.sample_collection.replay_buffer import ReplayBuffer
 from slimRL.networks.adadqnstatic import AdaDQNStatic
 from experiments.base.dqn import train
