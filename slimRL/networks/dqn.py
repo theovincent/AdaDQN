@@ -23,7 +23,7 @@ class DQN(SingleDQN):
         target_update_frequency: int,
     ):
         print(
-            f"Start training with: {optimizer.func.__name__}, lr = {learning_rate}, {loss.__name__}, features = {features} and {[activation.__name__ for activation in activations]}.",
+            f"Start training with: {optimizer.__name__}, lr = {learning_rate}, {loss.__name__}, features = {features} and {[activation.__name__ for activation in activations]}.",
             flush=True,
         )
 
