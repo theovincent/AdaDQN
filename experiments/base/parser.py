@@ -157,7 +157,7 @@ def dqn_parser(env_name: str, argvs):
         nargs="*",
         help="Features.",
         type=int,
-        default=[32, 64, 64, 512],
+        default=[200, 200],
     )
     parser.add_argument(
         "-as",
