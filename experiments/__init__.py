@@ -8,6 +8,7 @@ DISPLAY_NAME = {
     # Environments
     "lunar_lander": "Lunar Lander",
     "atari": "Atari",
+    "craftax": "Craftax",
 }
 
 AVAILABLE_COLORS = {
@@ -32,4 +33,17 @@ AVAILABLE_COLORS = {
     "light_yellow": "#F0E886",
     "cyan": "#17BECF",
     "light_cyan": "#9EDAE5",
+}
+
+
+COLORS = {
+    "adadqn": AVAILABLE_COLORS["green"],
+    "rsdqn": AVAILABLE_COLORS["orange"],
+    "dehbdqn": AVAILABLE_COLORS["blue"],
+}
+
+ORDERS = {
+    "adadqn": 5,
+    "rsdqn": 3,
+    "dehbdqn": 4,
 }
