@@ -160,8 +160,11 @@ cython_debug/
 .idea/
 .venv/
 env/
-env_*/
+env_cpu/
+env_gpu/
+env_test/
 rough/
+wandb/
 
 **.json
 **.npy
@@ -169,4 +172,3 @@ rough/
 !experiments/car_on_hill/V*.npy
 experiments/**/exp_output/*
 experiments/**/logs/*
-experiments/dump
