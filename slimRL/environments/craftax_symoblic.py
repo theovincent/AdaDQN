@@ -28,7 +28,7 @@ class CraftaxEnv:
         self.key, step_key = jax.random.split(self.key)
 
         self.n_steps += 1
-        self.state, self.env_state, reward, absorbing, self.info = self.env_step_fn(
+        self.state, self.env_state, reward, absorbing, _ = self.env_step_fn(
             step_key, self.env_state, action, self.env.default_params
         )
 
