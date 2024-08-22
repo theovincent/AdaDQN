@@ -1,7 +1,9 @@
+from collections import Counter
 from typing import Tuple, List, Callable, Dict
 from functools import partial
 import jax
 import jax.numpy as jnp
+import numpy as np
 import optax
 from dehb import DEHB
 from ConfigSpace import ConfigurationSpace, Integer, Float, Configuration
@@ -9,10 +11,11 @@ from slimdqn.networks.base_dqn import BaseDQN
 
 
 class HPGenerator:
-    def __init__(self, key, observation_dim, n_actions, hp_space) -> None:
+    def __init__(self, key, observation_dim, n_actions, hp_space, exploitation_type) -> None:
         self.observation_dim = observation_dim
         self.n_actions = n_actions
         self.hp_space = hp_space
+        self.exploitation_type = exploitation_type
 
         self.config_space = ConfigurationSpace(
             seed=int(key[1]),
@@ -60,3 +63,32 @@ class HPGenerator:
         }
 
         return hp_fn, params, optimizer_state, hp_detail
+
+    def exploit_and_explore(self, key, metrics, hp_fns, params, optimizer_states, hp_details):
+        n_networks = len(metrics)
+        # exploit
+        if self.exploitation_type == "elitism":
+            selected_indices = [np.argmax(metrics)]
+            for _ in range(n_networks - 1):
+                key, selection_key = jax.random.split(key)
+                selected_indices = jax.random.uniform(selection_key, (3,), int, 0, n_networks)
+                selected_indices.append(selected_indices[np.argmax(metrics[selected_indices])])
+
+            selected_indices_counter = Counter(selected_indices)
+
+            indices_replacing_hps = []
+            indices_new_hps = []
+            for idx in range(n_networks):
+                # if the idx has not been selected it will be replaced
+                if idx not in selected_indices:
+                    indices_new_hps.append(idx)
+                # if the idx has been selected more that once (- 1), it should be added to the list of replacing idx
+                else:
+                    indices_replacing_hps.extend([idx] * (selected_indices_counter[idx] - 1))
+
+        # explore
+        for idx in range(len(indices_new_hps)):
+            # change indices_replacing_hps[idx] hyperparameters and set it to indices_new_hps[idx]
+            pass
+
+        return indices_new_hps, hp_fns, params, optimizer_states, hp_details

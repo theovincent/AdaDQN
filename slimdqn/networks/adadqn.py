@@ -19,6 +19,7 @@ class AdaDQN:
         n_actions: int,
         n_networks: int,
         hp_space,
+        exploitation_type: str,
         hp_update_frequency: float,
         gamma: float,
         update_horizon: int,
@@ -29,7 +30,7 @@ class AdaDQN:
     ):
         hp_key, self.q_key, self.action_key = jax.random.split(key, 3)
         self.n_networks = n_networks
-        self.hp_generator = HPGenerator(hp_key, observation_dim, n_actions, hp_space)
+        self.hp_generator = HPGenerator(hp_key, observation_dim, n_actions, hp_space, exploitation_type)
         self.hp_update_frequency = hp_update_frequency
 
         self.hp_fns = [None] * self.n_networks
@@ -42,10 +43,12 @@ class AdaDQN:
             self.hp_fns[idx_hp], self.params[idx_hp], self.optimizer_states[idx_hp], self.hp_details[idx_hp] = (
                 self.hp_generator.sample(hp_key)
             )
-
             print(f"Starting HP: {self.hp_details[idx_hp]}", flush=True)
 
-        self.idx_new_hp = None
+        if exploitation_type == "elitism":
+            self.indices_new_hps = [None] * np.ceil((self.n_networks - 1) / 2).astype(int)
+        else:
+            self.indices_new_hps = [None] * np.ceil(self.n_networks * 0.2).astype(int)
         self.target_params = self.params[0].copy()
         self.idx_compute_target = 0
         self.losses = np.zeros(self.n_networks)
@@ -76,18 +79,17 @@ class AdaDQN:
         if step % self.target_update_frequency == 0:
             change_hp = step % self.hp_update_frequency == 0
             if change_hp:
-                # Change worst online network | take nans in priority, if all nans take the first network (self.idx_new_hp = 0)
-                self.idx_new_hp = jnp.argmax(self.losses)
-
                 self.q_key, hp_key = jax.random.split(self.q_key)
-                (
-                    self.hp_fns[self.idx_new_hp],
-                    self.params[self.idx_new_hp],
-                    self.optimizer_states[self.idx_new_hp],
-                    self.hp_details[self.idx_new_hp],
-                ) = self.hp_generator.sample(hp_key)
+                # for exploit_and_explore the higher the metric is the better
+                # this is why -self.losses is given as input
+                self.indices_new_hps, self.hp_fns, self.params, self.optimizer_states, self.hp_details = (
+                    self.hp_generator.exploit_and_explore(
+                        hp_key, -self.losses, self.hp_fns, self.params, self.optimizer_states, self.hp_details
+                    )
+                )
 
-                print(f"New HP: {self.hp_details[self.idx_new_hp]}", flush=True)
+                for idx_hp in self.indices_new_hps:
+                    print(f"New HP: {self.hp_details[idx_hp]}", flush=True)
 
             # Define new target | ignore the nans, if all nans take the last network (idx_compute_target = -1)
             self.idx_compute_target = jnp.nanargmin(self.losses)

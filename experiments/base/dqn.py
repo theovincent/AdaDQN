@@ -61,9 +61,9 @@ def train(
                         "idx_draw_action": agent.idx_draw_action,
                     }
                     if hp_changed:
-                        logs["idx_new_hp"] = agent.idx_new_hp
-                        for k_, v_ in agent.hp_details[agent.idx_new_hp].items():
-                            logs[f"hps/{agent.idx_new_hp}_{k_}"] = v_
+                        for idx_hp in agent.indices_new_hps:
+                            for k_, v_ in agent.hp_details[idx_hp].items():
+                                logs[f"hps/{idx_hp}_{k_}"] = v_
                     p["wandb"].log(logs)
 
                     cumulated_loss = 0
