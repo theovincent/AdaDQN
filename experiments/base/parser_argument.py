@@ -126,20 +126,6 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         type=int,
         default=1_000,
     )
-    parser.add_argument(
-        "-ee",
-        "--epsilon_end",
-        help="Ending value for the linear decaying epsilon used for exploration.",
-        type=float,
-        default=0.01,
-    )
-    parser.add_argument(
-        "-ed",
-        "--epsilon_duration",
-        help="Duration of epsilon's linear decay used for exploration.",
-        type=float,
-        default=1_000,
-    )
     # HP search space
     parser.add_argument(
         "-nlr",
@@ -211,6 +197,20 @@ def add_base_arguments(parser: argparse.ArgumentParser):
 
 @output_added_arguments
 def add_adadqn_arguments(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "-ee",
+        "--epsilon_end",
+        help="Ending value for the linear decaying epsilon used for exploration.",
+        type=float,
+        default=0.01,
+    )
+    parser.add_argument(
+        "-ed",
+        "--epsilon_duration",
+        help="Duration of epsilon's linear decay used for exploration.",
+        type=float,
+        default=1_000,
+    )
     parser.add_argument(
         "-eoe",
         "--epsilon_online_end",

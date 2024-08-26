@@ -37,7 +37,7 @@ def train(
         while n_training_steps_epoch < p["n_training_steps_per_epoch"] or not has_reset:
             key, exploration_key = jax.random.split(key)
             reward, has_reset = collect_single_sample(
-                exploration_key, env, agent, rb, p, epsilon_schedule, n_training_steps
+                exploration_key, env, agent, rb, p["horizon"], epsilon_schedule, n_training_steps
             )
 
             n_training_steps_epoch += 1
