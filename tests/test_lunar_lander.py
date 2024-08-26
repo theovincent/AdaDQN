@@ -13,44 +13,15 @@ class TestLunarLander(unittest.TestCase):
             shutil.rmtree(save_path)
 
         returncode = subprocess.run(
-            [
-                "python3",
-                "experiments/lunar_lander/dqn.py",
-                "--experiment_name",
-                "_test_dqn",
-                "--seed",
-                "1",
-                "--disable_wandb",
-                "--features",
-                "25",
-                "15",
-                "--replay_buffer_capacity",
-                "100",
-                "--batch_size",
-                "3",
-                "--update_horizon",
-                "1",
-                "--gamma",
-                "0.99",
-                "--learning_rate",
-                "1e-4",
-                "--horizon",
-                "10",
-                "--n_epochs",
-                "1",
-                "--n_training_steps_per_epoch",
-                "10",
-                "--update_to_data",
-                "3",
-                "--target_update_frequency",
-                "3",
-                "--n_initial_samples",
-                "3",
-                "--epsilon_end",
-                "0.01",
-                "--epsilon_duration",
-                "4",
-            ]
+            (
+                "python3 experiments/lunar_lander/adadqn.py --experiment_name _test_dqn --seed 1 --disable_wandb "
+                + "--n_networks 1 --replay_buffer_capacity 100 --batch_size 3 --update_horizon 1 --gamma 0.99 "
+                + "--horizon 10 --n_epochs 1 --n_training_steps_per_epoch 10 --update_to_data 3 "
+                + "--target_update_frequency 3 --n_initial_samples 3 --epsilon_end 0.01 --epsilon_duration 4 "
+                + "--n_layers_range 1 3 --n_neurons_range 25 200 --activations celu elu tanh --losses huber l1 "
+                + "--optimizers adagrad nadam --learning_rate_range 4 2 --exploitation_type elitism "
+                + "--hp_update_frequency 3 --epsilon_online_end 0.5 --epsilon_online_duration 10"
+            ).split(" ")
         ).returncode
         assert returncode == 0, "The command should not have raised an error."
 

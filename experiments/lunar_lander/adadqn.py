@@ -44,6 +44,7 @@ def run(argvs=sys.argv[1:]):
         env.n_actions,
         n_networks=p["n_networks"],
         hp_space=p["hp_space"],
+        exploitation_type=p["exploitation_type"],
         hp_update_frequency=p["hp_update_frequency"],
         gamma=p["gamma"],
         update_horizon=p["update_horizon"],
@@ -52,6 +53,7 @@ def run(argvs=sys.argv[1:]):
         epsilon_online_end=p["epsilon_online_end"],
         epsilon_online_duration=p["epsilon_online_duration"],
     )
+
     train(train_key, p, agent, env, rb)
 
 

@@ -47,7 +47,7 @@ class AdaDQN:
 
         if exploitation_type == "elitism":
             self.indices_new_hps = [None] * np.ceil((self.n_networks - 1) / 2).astype(int)
-        else:
+        elif exploitation_type == "truncation":
             self.indices_new_hps = [None] * np.ceil(self.n_networks * 0.2).astype(int)
         self.target_params = self.params[0].copy()
         self.idx_compute_target = 0

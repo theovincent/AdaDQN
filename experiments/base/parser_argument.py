@@ -158,13 +158,6 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         default=[50, 200],
     )
     parser.add_argument(
-        "-lr",
-        "--learning_rate",
-        help="Learning rate.",
-        type=float,
-        default=3e-4,
-    )
-    parser.add_argument(
         "-as",
         "--activations",
         nargs="*",
@@ -195,9 +188,17 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         "-lrr",
         "--learning_rate_range",
         nargs=2,
-        help="Range of the learning rate. It is sample in log space [10^low_range, 10^high_range].",
+        help="Range of the learning rate. It is sample in log space [10^-low_range, 10^-high_range].",
         type=int,
-        default=[-6, -2],
+        default=[6, 2],
+    )
+    parser.add_argument(
+        "-et",
+        "--exploitation_type",
+        help="Type of exploitation in the space of hyperparameters.",
+        type=str,
+        choices=["elitism", "truncation"],
+        default="elitism",
     )
     parser.add_argument(
         "-huf",
