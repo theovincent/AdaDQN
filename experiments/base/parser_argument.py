@@ -50,13 +50,6 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         action="store_true",
     )
     parser.add_argument(
-        "-nn",
-        "--n_networks",
-        help="Number of networks trained in parralel.",
-        type=int,
-        default=4,
-    )
-    parser.add_argument(
         "-rbc",
         "--replay_buffer_capacity",
         help="Replay Buffer capacity.",
@@ -89,7 +82,7 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         "--horizon",
         help="Horizon for truncation.",
         type=int,
-        default=1000,
+        default=1_000,
     )
     parser.add_argument(
         "-ne",
@@ -178,6 +171,16 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         type=int,
         default=[6, 2],
     )
+
+
+def add_parallel_training_arguments(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "-nn",
+        "--n_networks",
+        help="Number of networks trained in parralel.",
+        type=int,
+        default=5,
+    )
     parser.add_argument(
         "-et",
         "--exploitation_type",
@@ -186,17 +189,9 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         choices=["elitism", "truncation"],
         default="elitism",
     )
-    parser.add_argument(
-        "-huf",
-        "--hp_update_frequency",
-        help="Number of training steps before updating the hyperparameter.",
-        type=int,
-        default=500_00,
-    )
 
 
-@output_added_arguments
-def add_adadqn_arguments(parser: argparse.ArgumentParser):
+def add_epsilon_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "-ee",
         "--epsilon_end",
@@ -211,12 +206,25 @@ def add_adadqn_arguments(parser: argparse.ArgumentParser):
         type=float,
         default=1_000,
     )
+
+
+@output_added_arguments
+def add_adadqn_arguments(parser: argparse.ArgumentParser):
+    add_parallel_training_arguments(parser)
+    add_epsilon_arguments(parser)
+    parser.add_argument(
+        "-huf",
+        "--hp_update_frequency",
+        help="Number of training steps before updating the hyperparameter.",
+        type=int,
+        default=2_000,
+    )
     parser.add_argument(
         "-eoe",
         "--epsilon_online_end",
         help="Ending value for the linear decaying epsilon used for choosing from which Q-networks to sample actions.",
         type=float,
-        default=0.01,
+        default=1,
     )
     parser.add_argument(
         "-eod",
@@ -224,4 +232,54 @@ def add_adadqn_arguments(parser: argparse.ArgumentParser):
         help="Duration of epsilon's linear decay used for choosing from which Q-networks to sample actions.",
         type=float,
         default=500_000,
+    )
+
+
+@output_added_arguments
+def add_searldqn_arguments(parser: argparse.ArgumentParser):
+    add_parallel_training_arguments(parser)
+    parser.add_argument(
+        "-mse",
+        "--min_steps_evaluation",
+        help="Minimum number of steps to perform to evaluate an agent.",
+        type=int,
+        default=400,
+    )
+    parser.add_argument(
+        "-tp",
+        "--training_proportion",
+        help="Proportion of the number of sampling step that is used as training steps.",
+        type=float,
+        default=0.5,
+    )
+
+
+@output_added_arguments
+def add_rsdqn_arguments(parser: argparse.ArgumentParser):
+    add_epsilon_arguments(parser)
+    parser.add_argument(
+        "-hupe",
+        "--hp_update_per_epoch",
+        help="Number of epochs before updating the hyperparameter.",
+        type=int,
+        default=20,
+    )
+
+
+@output_added_arguments
+def add_dehbdqn_arguments(parser: argparse.ArgumentParser):
+    add_epsilon_arguments(parser)
+    parser.add_argument(
+        "-mimneph",
+        "--min_n_epochs_per_hp",
+        help="Minimum number of epochs before updating the hyperparameter.",
+        type=int,
+        default=13,
+    )
+    parser.add_argument(
+        "-maxneph",
+        "--max_n_epochs_per_hp",
+        help="Maximum number of epochs before updating the hyperparameter.",
+        type=int,
+        default=27,
     )

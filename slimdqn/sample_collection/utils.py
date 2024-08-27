@@ -39,7 +39,7 @@ def collect_single_episode(env, agent, rb: ReplayBuffer, horizon: int, min_steps
     n_episodes = 0
     n_steps = 0
 
-    while not episode_end and n_steps < min_steps:
+    while not episode_end or n_steps < min_steps:
         action = agent.best_action(agent.params, env.state).item()
         obs = env.observation
         reward, absorbing = env.step(action)

@@ -1,6 +1,4 @@
 from collections import Counter
-from typing import Tuple, List, Callable, Dict
-from functools import partial
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -77,8 +75,8 @@ class HPGenerator:
             selected_indices = [np.argmax(metrics)]
             for _ in range(n_networks - 1):
                 key, selection_key = jax.random.split(key)
-                random_indices = jax.random.uniform(selection_key, (3,), int, 0, n_networks)
-                selected_indices.append(random_indices[np.argmax(metrics[random_indices])])
+                random_indices = jax.random.randint(selection_key, (3,), 0, n_networks)
+                selected_indices.append(random_indices[np.argmax(metrics[random_indices])].item())
 
             selected_indices_counter = Counter(selected_indices)
 
@@ -149,3 +147,58 @@ class HPGenerator:
             hp_details[indices_new_hps[idx]] = new_hp_detail
 
         return indices_new_hps, hp_fns, params, optimizer_states, hp_details
+
+    def dehb_init(self, min_n_epochs_per_hp, max_n_epochs_per_hp):
+        self.meta_optimizer = DEHB(
+            cs=self.config_space,
+            dimensions=len(self.config_space.values()),
+            min_fidelity=min_n_epochs_per_hp,
+            max_fidelity=max_n_epochs_per_hp,
+            n_workers=1,
+            output_path="experiments/dump",
+        )
+
+    def dehb_sample(self, key, avg_return):
+        if avg_return is not None:
+            job_info = {
+                "config": Configuration(
+                    self.config_space,
+                    values={
+                        "n_layers": self.hp_detail["n_layers"],
+                        "n_neurons": self.hp_detail["n_neurons"],
+                        "idx_activation": self.hp_detail["idx_activation"],
+                        "idx_loss": self.hp_detail["idx_loss"],
+                        "idx_optimizer": self.hp_detail["idx_optimizer"],
+                        "learning_rate": self.hp_detail["learning_rate"],
+                    },
+                ),
+                "fidelity": self.hp_extra_detail["fidelity"],
+                "parent_id": self.hp_extra_detail["parent_id"],
+                "config_id": self.hp_extra_detail["config_id"],
+                "bracket_id": self.hp_extra_detail["bracket_id"],
+            }
+            #  The cost of getting the fitness is egal to the requested fidelity
+            self.meta_optimizer.tell(job_info, {"fitness": -avg_return, "cost": int(job_info["fidelity"])})
+
+        # Ask for next configuration to run
+        job_info = self.meta_optimizer.ask()
+
+        self.hp_detail = {
+            "n_layers": job_info["config"]["n_layers"],
+            "n_neurons": job_info["config"]["n_neurons"],
+            "idx_activation": job_info["config"]["idx_activation"],
+            "idx_loss": job_info["config"]["idx_loss"],
+            "idx_optimizer": job_info["config"]["idx_optimizer"],
+            "learning_rate": job_info["config"]["learning_rate"],
+        }
+
+        hp_fn, params, optimizer_state = self.from_hp_detail(key, self.hp_detail)
+
+        self.hp_extra_detail = {
+            "fidelity": job_info["fidelity"],
+            "parent_id": job_info["parent_id"],
+            "config_id": job_info["config_id"],
+            "bracket_id": job_info["bracket_id"],
+        }
+
+        return hp_fn, params, optimizer_state, self.hp_detail, int(job_info["fidelity"])

@@ -1,5 +1,4 @@
 from typing import Dict
-import optax
 import jax
 from flax.core import FrozenDict
 from functools import partial
@@ -7,11 +6,12 @@ import jax.numpy as jnp
 import numpy as np
 from slimdqn.networks.hyperparameters.generators import HPGenerator
 from slimdqn.sample_collection.replay_buffer import ReplayBuffer
+from slimdqn.sample_collection.utils import collect_single_episode
 
 from slimdqn.sample_collection import IDX_RB
 
 
-class AdaDQN:
+class SEARLDQN:
     def __init__(
         self,
         key: jax.random.PRNGKey,
@@ -20,18 +20,14 @@ class AdaDQN:
         n_networks: int,
         hp_space,
         exploitation_type: str,
-        hp_update_frequency: float,
         gamma: float,
         update_horizon: int,
         update_to_data: int,
         target_update_frequency: int,
-        epsilon_online_end: float,
-        epsilon_online_duration: int,
     ):
-        hp_key, self.q_key, self.action_key = jax.random.split(key, 3)
+        hp_key, self.q_key, _ = jax.random.split(key, 3)
         self.n_networks = n_networks
         self.hp_generator = HPGenerator(hp_key, observation_dim, n_actions, hp_space, exploitation_type)
-        self.hp_update_frequency = hp_update_frequency
 
         self.hp_fns = [None] * self.n_networks
         self.params = [None] * self.n_networks
@@ -49,21 +45,15 @@ class AdaDQN:
             self.indices_new_hps = [None] * np.ceil((self.n_networks - 1) / 2).astype(int)
         elif exploitation_type == "truncation":
             self.indices_new_hps = [None] * np.ceil(self.n_networks * 0.2).astype(int)
-        self.target_params = self.params[0].copy()
-        self.idx_compute_target = 0
+        self.target_params = self.params.copy()
         self.losses = np.zeros(self.n_networks)
 
-        self.epsilon_b_schedule = optax.linear_schedule(1.0, epsilon_online_end, epsilon_online_duration)
         self.idx_draw_action = 0
-        self.n_draws_action = 0
 
         self.gamma = gamma
         self.update_horizon = update_horizon
         self.update_to_data = update_to_data
         self.target_update_frequency = target_update_frequency
-        assert (
-            hp_update_frequency % target_update_frequency == 0
-        ), f"hp_update_frequency ({hp_update_frequency}) should be a multiple of target_update_frequency ({target_update_frequency})."
 
     def update_online_params(self, step: int, replay_buffer: ReplayBuffer):
         if step % self.update_to_data == 0:
@@ -72,39 +62,21 @@ class AdaDQN:
 
     def update_target_params(self, step: int):
         if step % self.target_update_frequency == 0:
-            change_hp = step % self.hp_update_frequency == 0
-            if change_hp:
-                self.q_key, hp_key = jax.random.split(self.q_key)
-                # for exploit_and_explore the higher the metric is the better
-                # this is why -self.losses is given as input
-                self.indices_new_hps, self.hp_fns, self.params, self.optimizer_states, self.hp_details = (
-                    self.hp_generator.exploit_and_explore(
-                        hp_key, -self.losses, self.hp_fns, self.params, self.optimizer_states, self.hp_details
-                    )
-                )
-
-                for idx_hp in self.indices_new_hps:
-                    print(f"New HP: {self.hp_details[idx_hp]}", flush=True)
-
-            # Define new target | ignore the nans, if all nans take the last network (idx_compute_target = -1)
-            self.idx_compute_target = jnp.nanargmin(self.losses)
-            self.target_params = self.params[self.idx_compute_target].copy()
-
+            self.target_params = self.params.copy()
             # Reset the loss
             self.losses = np.zeros_like(self.losses)
-
-            return True, change_hp
-        return False, False
+            return True
+        return False
 
     def learn_on_batch(self, batch_samples):
         losses = np.zeros(self.n_networks)
 
-        value_next_states = self.hp_fns[self.idx_compute_target]["apply_fn"](
-            self.target_params, batch_samples[IDX_RB["next_state"]]
-        )
-        targets = self.compute_target_from_values(value_next_states, batch_samples)
-
         for idx_hp in range(self.n_networks):
+            value_next_states = self.hp_fns[idx_hp]["apply_fn"](
+                self.target_params[idx_hp], batch_samples[IDX_RB["next_state"]]
+            )
+            targets = self.compute_target_from_values(value_next_states, batch_samples)
+
             loss, self.params[idx_hp], self.optimizer_states[idx_hp] = self.hp_fns[idx_hp]["update_and_loss_fn"](
                 self.params[idx_hp], targets, batch_samples, self.optimizer_states[idx_hp]
             )
@@ -121,24 +93,7 @@ class AdaDQN:
         ) * self.gamma**self.update_horizon * jnp.max(value_next_states, axis=-1)
 
     def best_action(self, params: FrozenDict, state: jnp.ndarray):
-        # computes the best action for a single state
-        self.action_key, self.n_draws_action, self.idx_draw_action = self.selected_idx_for_action(
-            self.action_key, self.n_draws_action, self.idx_compute_target
-        )
-
         return self.hp_fns[self.idx_draw_action]["best_action_fn"](params[self.idx_draw_action], state)
-
-    @partial(jax.jit, static_argnames="self")
-    def selected_idx_for_action(self, key, n_draws, idx_compute_target):
-        key, epsilon_key, sample_key = jax.random.split(key, 3)
-
-        selected_idx = jax.lax.select(
-            jax.random.uniform(epsilon_key) < self.epsilon_b_schedule(n_draws),
-            jax.random.randint(sample_key, (), 0, self.n_networks),  # if true
-            idx_compute_target,  # if false
-        )
-
-        return key, n_draws + 1, selected_idx
 
     def get_model(self) -> Dict:
         model = {}
@@ -149,6 +104,28 @@ class AdaDQN:
                 "hp_detail": self.hp_details[idx_hp],
             }
 
-        model["idx_compute_target"] = jnp.nanargmin(self.losses)
-
         return model
+
+    def evaluate(self, env, rb, horizon, min_steps):
+        returns = np.zeros(self.n_networks)
+        n_steps = np.zeros(self.n_networks)
+
+        for idx_hp in range(self.n_networks):
+            self.idx_draw_action = idx_hp
+            returns[idx_hp], n_steps[idx_hp] = collect_single_episode(env, self, rb, horizon, min_steps)
+
+        return returns, n_steps
+
+    def exploit_and_explore(self, returns):
+        self.q_key, hp_key = jax.random.split(self.q_key)
+        self.indices_new_hps, self.hp_fns, self.params, self.optimizer_states, self.hp_details = (
+            self.hp_generator.exploit_and_explore(
+                hp_key, returns, self.hp_fns, self.params, self.optimizer_states, self.hp_details
+            )
+        )
+
+        for idx_hp in self.indices_new_hps:
+            print(f"New HP: {self.hp_details[idx_hp]}", flush=True)
+
+        # Force target update
+        self.update_target_params(0)
