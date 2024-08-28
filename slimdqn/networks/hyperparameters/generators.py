@@ -72,11 +72,11 @@ class HPGenerator:
         # exploit
         if self.exploitation_type == "elitism":
             # Make sure the best HP is kept
-            selected_indices = [np.argmax(metrics)]
+            selected_indices = [np.nanargmax(metrics)]
             for _ in range(n_networks - 1):
                 key, selection_key = jax.random.split(key)
-                random_indices = jax.random.randint(selection_key, (3,), 0, n_networks)
-                selected_indices.append(random_indices[np.argmax(metrics[random_indices])].item())
+                random_indices = jax.random.choice(selection_key, jnp.arange(n_networks), (3,), replace=False)
+                selected_indices.append(random_indices[np.nanargmax(metrics[random_indices])].item())
 
             selected_indices_counter = Counter(selected_indices)
 
@@ -92,7 +92,9 @@ class HPGenerator:
         elif self.exploitation_type == "truncation":
             cut_new_hps = np.around(n_networks * 0.2).astype(int)
             cut_replacing_hps = n_networks - cut_new_hps
-            partition_indices = np.argpartition(metrics, (cut_new_hps, cut_replacing_hps))
+            partition_indices_ = np.argpartition(metrics, (cut_new_hps, cut_replacing_hps))
+            # Replace the nans first
+            partition_indices = np.roll(partition_indices_, np.isnan(metrics).sum())
 
             indices_new_hps = partition_indices[:cut_new_hps]
             indices_replacing_hps = partition_indices[cut_replacing_hps:]

@@ -45,10 +45,6 @@ class AdaDQN:
             )
             print(f"Starting HP: {self.hp_details[idx_hp]}", flush=True)
 
-        if exploitation_type == "elitism":
-            self.indices_new_hps = [None] * np.ceil((self.n_networks - 1) / 2).astype(int)
-        elif exploitation_type == "truncation":
-            self.indices_new_hps = [None] * np.ceil(self.n_networks * 0.2).astype(int)
         self.target_params = self.params[0].copy()
         self.idx_compute_target = 0
         self.losses = np.zeros(self.n_networks)
