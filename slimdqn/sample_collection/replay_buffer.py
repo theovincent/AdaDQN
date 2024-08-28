@@ -176,11 +176,11 @@ class ReplayBuffer(object):
             rb._max_sample_attempts,
             rb._extra_storage_types,
             rb._observation_dtype,
-            rb.terminal_dtype,
-            rb.action_shape,
-            rb.action_dtype,
-            rb.reward_shape,
-            rb.reward_dtype,
+            rb._terminal_dtype,
+            rb._action_shape,
+            rb._action_dtype,
+            rb._reward_shape,
+            rb._reward_dtype,
         )
 
     def _create_storage(self):
