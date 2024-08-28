@@ -1,5 +1,4 @@
 from typing import Dict
-import optax
 import jax
 from flax.core import FrozenDict
 from functools import partial
@@ -25,8 +24,6 @@ class AdaDQN:
         update_horizon: int,
         update_to_data: int,
         target_update_frequency: int,
-        epsilon_online_end: float,
-        epsilon_online_duration: int,
     ):
         hp_key, self.q_key, self.action_key = jax.random.split(key, 3)
         self.n_networks = n_networks
@@ -48,10 +45,6 @@ class AdaDQN:
         self.target_params = self.params[0].copy()
         self.idx_compute_target = 0
         self.losses = np.zeros(self.n_networks)
-
-        self.epsilon_b_schedule = optax.linear_schedule(1.0, epsilon_online_end, epsilon_online_duration)
-        self.idx_draw_action = 0
-        self.n_draws_action = 0
 
         self.gamma = gamma
         self.update_horizon = update_horizon
@@ -118,23 +111,18 @@ class AdaDQN:
 
     def best_action(self, params: FrozenDict, state: jnp.ndarray):
         # computes the best action for a single state
-        self.action_key, self.n_draws_action, self.idx_draw_action = self.selected_idx_for_action(
-            self.action_key, self.n_draws_action, self.idx_compute_target
-        )
+        self.action_key, self.idx_draw_action = self.selected_idx_for_action(self.action_key, self.losses)
 
         return self.hp_fns[self.idx_draw_action]["best_action_fn"](params[self.idx_draw_action], state)
 
     @partial(jax.jit, static_argnames="self")
-    def selected_idx_for_action(self, key, n_draws, idx_compute_target):
-        key, epsilon_key, sample_key = jax.random.split(key, 3)
+    def selected_idx_for_action(self, key, losses):
+        key, choice_key = jax.random.split(key)
+        p = jnp.nan_to_num(jnp.nanmax(losses) / (losses + 1e-6))
 
-        selected_idx = jax.lax.select(
-            jax.random.uniform(epsilon_key) < self.epsilon_b_schedule(n_draws),
-            jax.random.randint(sample_key, (), 0, self.n_networks),  # if true
-            idx_compute_target,  # if false
-        )
+        selected_idx = jax.random.choice(choice_key, jnp.arange(self.n_networks), (), p=p / p.sum())
 
-        return key, n_draws + 1, selected_idx
+        return key, selected_idx
 
     def get_model(self) -> Dict:
         model = {}

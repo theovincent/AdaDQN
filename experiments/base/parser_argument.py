@@ -217,21 +217,7 @@ def add_adadqn_arguments(parser: argparse.ArgumentParser):
         "--hp_update_frequency",
         help="Number of training steps before updating the hyperparameter.",
         type=int,
-        default=2_000,
-    )
-    parser.add_argument(
-        "-eoe",
-        "--epsilon_online_end",
-        help="Ending value for the linear decaying epsilon used for choosing from which Q-networks to sample actions.",
-        type=float,
-        default=1,
-    )
-    parser.add_argument(
-        "-eod",
-        "--epsilon_online_duration",
-        help="Duration of epsilon's linear decay used for choosing from which Q-networks to sample actions.",
-        type=float,
-        default=500_000,
+        default=10_000,
     )
 
 

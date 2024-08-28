@@ -44,7 +44,7 @@ def test_prepare_logs():
 
     # Create again folders and parameters.json with different first parameter for adadqn -> should throw an error
     parameters = json.load(open(os.path.join(save_path, "parameters.json"), "rb"))
-    first_adadqn_param = list(parameters["adadqn"].keys())[1]
+    first_adadqn_param = list(parameters["adadqn"].keys())[0]
     first_adadqn_param_value = parameters["adadqn"][first_adadqn_param] + 1
     try:
         prepare_logs(

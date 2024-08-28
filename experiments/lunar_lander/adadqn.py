@@ -50,8 +50,6 @@ def run(argvs=sys.argv[1:]):
         update_horizon=p["update_horizon"],
         update_to_data=p["update_to_data"],
         target_update_frequency=p["target_update_frequency"],
-        epsilon_online_end=p["epsilon_online_end"],
-        epsilon_online_duration=p["epsilon_online_duration"],
     )
 
     train(train_key, p, agent, env, rb)
