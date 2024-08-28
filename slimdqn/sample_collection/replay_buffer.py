@@ -163,6 +163,26 @@ class ReplayBuffer(object):
         self._next_experience_is_episode_start = True
         self.episode_end_indices = set()
 
+    @classmethod
+    def reset(cls, rb):
+        return cls(
+            rb._observation_shape,
+            rb._replay_capacity,
+            rb._batch_size,
+            rb._update_horizon,
+            rb._gamma,
+            rb._clipping,
+            rb._stack_size,
+            rb._max_sample_attempts,
+            rb._extra_storage_types,
+            rb._observation_dtype,
+            rb.terminal_dtype,
+            rb.action_shape,
+            rb.action_dtype,
+            rb.reward_shape,
+            rb.reward_dtype,
+        )
+
     def _create_storage(self):
         """Creates the numpy arrays used to store transitions."""
         self._store = {}

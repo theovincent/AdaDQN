@@ -70,6 +70,8 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
 
         hp_changed = agent.update_hp(idx_epoch + 1, avg_return)
         if hp_changed:
+            n_training_steps = 0
+            rb = rb.reset(rb)
             logs = {"n_training_steps": n_training_steps}
             for k_, v_ in agent.hp_detail.items():
                 logs[f"hps/{k_}"] = v_
