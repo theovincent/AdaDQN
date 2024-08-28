@@ -27,8 +27,8 @@ do
         --training_proportion 0.5
 done
 
-launch_job/lunar_lander/cluster_rsdqn.sh --experiment_name ne30 --n_epochs 300 --epsilon_end 0.01 \
+launch_job/lunar_lander/cluster_rsdqn.sh --experiment_name ne30 $SHARED_ARGS --n_epochs 300 --epsilon_end 0.01 \
     --epsilon_duration 1_000 --hp_update_per_epoch 30
 
-launch_job/lunar_lander/cluster_dehbdqn.sh --experiment_name minne10_maxne50 --n_epochs 300 --epsilon_end 0.01 \
+launch_job/lunar_lander/cluster_dehbdqn.sh --experiment_name minne10_maxne50 $SHARED_ARGS --n_epochs 300 --epsilon_end 0.01 \
     --epsilon_duration 1_000 --min_n_epochs_per_hp 10 --max_n_epochs_per_hp 50
