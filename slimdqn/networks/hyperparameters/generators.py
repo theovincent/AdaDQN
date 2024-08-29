@@ -1,4 +1,5 @@
 from collections import Counter
+import copy
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -33,7 +34,7 @@ class HPGenerator:
             },
         )
 
-    def from_hp_detail(self, key, hp_detail):
+    def from_hp_detail(self, key, hp_detail, new_params=None):
         q = BaseDQN(
             [hp_detail["n_neurons"]] * hp_detail["n_layers"],
             [self.hp_space["activations"][hp_detail["idx_activation"]]] * hp_detail["n_layers"],
@@ -56,6 +57,13 @@ class HPGenerator:
             "best_action_fn": jax.jit(q.best_action),
         }
         params = q.q_network.init(key, jnp.zeros(self.observation_dim))
+        if new_params is not None:
+            params = jax.tree.map(
+                lambda new_weights, random_weights: jnp.where(new_weights == 0, random_weights, new_weights),
+                new_params,
+                params,
+            )
+
         optimizer_state = optimizer.init(params)
 
         return hp_fn, params, optimizer_state
@@ -102,6 +110,7 @@ class HPGenerator:
         # explore
         for idx in range(len(indices_new_hps)):
             new_hp_detail = hp_details[indices_replacing_hps[idx]].copy()
+            new_params = copy.deepcopy(params[indices_replacing_hps[idx]])
 
             key, explore_key, change_key = jax.random.split(key, 3)
             random_uniform = jax.random.uniform(explore_key)
@@ -115,12 +124,64 @@ class HPGenerator:
                         self.config_space["n_layers"].lower,
                         self.config_space["n_layers"].upper,
                     )
+                    if new_hp_detail["n_layers"] < hp_details[indices_replacing_hps[idx]]["n_layers"]:
+                        layers_key = list(new_params["params"].keys())
+                        new_params["params"][layers_key[-2]] = jax.tree.map(
+                            lambda a: jnp.zeros_like(a), new_params["params"].pop(layers_key[-1])
+                        )
+                    elif new_hp_detail["n_layers"] > hp_details[indices_replacing_hps[idx]]["n_layers"]:
+                        layers_key = list(new_params["params"].keys())
+                        last_key = layers_key[-1]
+                        new_layers_key = last_key.replace(last_key.split("_")[1], str(int(last_key.split("_")[1]) + 1))
+                        new_params["params"][new_layers_key] = jax.tree.map(
+                            lambda a: jnp.zeros_like(a), new_params["params"][layers_key[-1]]
+                        )
+                        n_neurons = hp_details[indices_replacing_hps[idx]]["n_neurons"]
+                        new_params["params"][layers_key[-1]] = jax.tree.map(
+                            lambda a: jnp.zeros((n_neurons,) * a.ndim), new_params["params"][layers_key[-2]]
+                        )
                 else:
                     new_hp_detail["n_neurons"] = np.clip(
                         hp_details[indices_replacing_hps[idx]]["n_neurons"] + plus_minus * 16,
                         self.config_space["n_neurons"].lower,
                         self.config_space["n_neurons"].upper,
                     )
+                    new_n_neurons = new_hp_detail["n_neurons"]
+                    n_neurons = hp_details[indices_replacing_hps[idx]]["n_neurons"]
+
+                    if new_n_neurons < n_neurons:
+
+                        def remove_neurons(weights: jnp.ndarray):
+                            if weights.shape == (n_neurons, n_neurons):
+                                return weights[:new_n_neurons, :new_n_neurons]
+                            elif weights.shape == (n_neurons,) or (weights.ndim == 2 and weights.shape[0] == n_neurons):
+                                return weights[:new_n_neurons]
+                            elif weights.ndim == 2 and weights.shape[1] == n_neurons:
+                                return weights[:, :new_n_neurons]
+                            else:
+                                return weights
+
+                        new_params = jax.tree.map(remove_neurons, new_params)
+                    elif new_n_neurons > n_neurons:
+
+                        def add_neurons(weights: jnp.ndarray):
+                            if weights.shape == (n_neurons, n_neurons):
+                                new_weights = jnp.zeros((new_n_neurons, new_n_neurons))
+                                return new_weights.at[:n_neurons, :n_neurons].set(weights)
+                            elif weights.ndim == 2 and weights.shape[0] == n_neurons:
+                                new_weights = jnp.zeros((new_n_neurons, weights.shape[1]))
+                                return new_weights.at[:n_neurons, :].set(weights)
+                            elif weights.ndim == 2 and weights.shape[1] == n_neurons:
+                                new_weights = jnp.zeros((weights.shape[0], new_n_neurons))
+                                return new_weights.at[:, :n_neurons].set(weights)
+                            elif weights.shape == (n_neurons,):
+                                new_weights = jnp.zeros(new_n_neurons)
+                                return new_weights.at[:n_neurons].set(weights)
+                            else:
+                                return weights
+
+                        new_params = jax.tree.map(add_neurons, new_params)
+
             elif random_uniform < 0.4:
                 new_hp_detail["idx_activation"] = jax.random.randint(
                     change_key, (), 0, self.config_space["idx_activation"].upper, dtype=int
@@ -144,7 +205,7 @@ class HPGenerator:
 
             key, hp_key = jax.random.split(key)
             hp_fns[indices_new_hps[idx]], params[indices_new_hps[idx]], optimizer_states[indices_new_hps[idx]] = (
-                self.from_hp_detail(hp_key, new_hp_detail)
+                self.from_hp_detail(hp_key, new_hp_detail, new_params)
             )
             hp_details[indices_new_hps[idx]] = new_hp_detail
 
