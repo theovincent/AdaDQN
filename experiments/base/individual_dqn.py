@@ -12,12 +12,13 @@ from slimdqn.sample_collection.utils import collect_single_sample
 def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer):
     epsilon_schedule = optax.linear_schedule(1.0, p["epsilon_end"], p["epsilon_duration"])
 
+    n_total_training_steps = 0
     n_training_steps = 0
     env.reset()
     episode_returns_per_epoch = [[0]]
     episode_lengths_per_epoch = [[0]]
 
-    logs = {"n_training_steps": n_training_steps}
+    logs = {"n_training_steps": n_training_steps, "n_total_training_steps": n_total_training_steps}
     for k_, v_ in agent.hp_detail.items():
         logs[f"hps/{k_}"] = v_
     p["wandb"].log(logs)
@@ -33,6 +34,7 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
             )
 
             n_training_steps_epoch += 1
+            n_total_training_steps += 1
             n_training_steps += 1
 
             episode_returns_per_epoch[idx_epoch][-1] += reward
@@ -47,7 +49,13 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
                 target_updated = agent.update_target_params(n_training_steps)
 
                 if target_updated:
-                    p["wandb"].log({"n_training_steps": n_training_steps, "hps/loss": loss})
+                    p["wandb"].log(
+                        {
+                            "n_training_steps": n_training_steps,
+                            "n_total_training_steps": n_total_training_steps,
+                            "hps/loss": loss,
+                        }
+                    )
 
         avg_return = np.mean(episode_returns_per_epoch[idx_epoch])
         avg_length_episode = np.mean(episode_lengths_per_epoch[idx_epoch])
@@ -57,6 +65,7 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
             {
                 "epoch": idx_epoch,
                 "n_training_steps": n_training_steps,
+                "n_total_training_steps": n_total_training_steps,
                 "avg_return": avg_return,
                 "avg_length_episode": avg_length_episode,
             }
@@ -72,7 +81,7 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
         if hp_changed:
             n_training_steps = 0
             rb = rb.reset(rb)
-            logs = {"n_training_steps": n_training_steps}
+            logs = {"n_training_steps": n_training_steps, "n_total_training_steps": n_total_training_steps}
             for k_, v_ in agent.hp_detail.items():
                 logs[f"hps/{k_}"] = v_
             p["wandb"].log(logs)
