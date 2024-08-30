@@ -12,13 +12,13 @@ from slimdqn.sample_collection.utils import collect_single_sample
 def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer):
     epsilon_schedule = optax.linear_schedule(1.0, p["epsilon_end"], p["epsilon_duration"])
 
-    n_total_training_steps = 0
     n_training_steps = 0
+    n_training_steps_run = 0
     env.reset()
     episode_returns_per_epoch = [[0]]
     episode_lengths_per_epoch = [[0]]
 
-    logs = {"n_training_steps": n_training_steps, "n_total_training_steps": n_total_training_steps}
+    logs = {"n_training_steps": n_training_steps, "n_training_steps_run": n_training_steps_run}
     for k_, v_ in agent.hp_detail.items():
         logs[f"hps/{k_}"] = v_
     p["wandb"].log(logs)
@@ -30,12 +30,12 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
         while n_training_steps_epoch < p["n_training_steps_per_epoch"] or not has_reset:
             key, exploration_key = jax.random.split(key)
             reward, has_reset = collect_single_sample(
-                exploration_key, env, agent, rb, p["horizon"], epsilon_schedule, n_training_steps
+                exploration_key, env, agent, rb, p["horizon"], epsilon_schedule, n_training_steps_run
             )
 
             n_training_steps_epoch += 1
-            n_total_training_steps += 1
             n_training_steps += 1
+            n_training_steps_run += 1
 
             episode_returns_per_epoch[idx_epoch][-1] += reward
             episode_lengths_per_epoch[idx_epoch][-1] += 1
@@ -43,16 +43,16 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
                 episode_returns_per_epoch[idx_epoch].append(0)
                 episode_lengths_per_epoch[idx_epoch].append(0)
 
-            if n_training_steps > p["n_initial_samples"]:
-                agent.update_online_params(n_training_steps, rb)
+            if n_training_steps_run > p["n_initial_samples"]:
+                agent.update_online_params(n_training_steps_run, rb)
                 loss = agent.loss
-                target_updated = agent.update_target_params(n_training_steps)
+                target_updated = agent.update_target_params(n_training_steps_run)
 
                 if target_updated:
                     p["wandb"].log(
                         {
                             "n_training_steps": n_training_steps,
-                            "n_total_training_steps": n_total_training_steps,
+                            "n_training_steps_run": n_training_steps_run,
                             "hps/loss": loss,
                         }
                     )
@@ -65,7 +65,7 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
             {
                 "epoch": idx_epoch,
                 "n_training_steps": n_training_steps,
-                "n_total_training_steps": n_total_training_steps,
+                "n_training_steps_run": n_training_steps_run,
                 "avg_return": avg_return,
                 "avg_length_episode": avg_length_episode,
             }
@@ -79,9 +79,9 @@ def train(key: jax.random.PRNGKey, p: dict, agent: RSDQN, env, rb: ReplayBuffer)
 
         hp_changed = agent.update_hp(idx_epoch + 1, avg_return)
         if hp_changed:
-            n_training_steps = 0
+            n_training_steps_run = 0
             rb = rb.reset(rb)
-            logs = {"n_training_steps": n_training_steps, "n_total_training_steps": n_total_training_steps}
+            logs = {"n_training_steps": n_training_steps, "n_training_steps_run": n_training_steps_run}
             for k_, v_ in agent.hp_detail.items():
                 logs[f"hps/{k_}"] = v_
             p["wandb"].log(logs)
