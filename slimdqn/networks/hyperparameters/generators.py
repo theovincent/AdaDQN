@@ -16,6 +16,7 @@ class HPGenerator:
         self.n_actions = n_actions
         self.hp_space = hp_space
         self.exploitation_type = exploitation_type
+        self.cnn = not (self.hp_space["cnn_n_layers_range"][0] == self.hp_space["cnn_n_layers_range"][1] == 0)
 
         space = {
             "mlp_n_layers": Integer(
@@ -33,7 +34,7 @@ class HPGenerator:
                 log=True,
             ),
         }
-        if not (self.hp_space["cnn_n_layers_range"][0] == self.hp_space["cnn_n_layers_range"][1] == 0):
+        if self.cnn:
             space["cnn_n_layers"] = Integer(
                 "cnn_n_layers", bounds=(hp_space["cnn_n_layers_range"][0], hp_space["cnn_n_layers_range"][1])
             )
@@ -49,7 +50,16 @@ class HPGenerator:
 
         self.config_space = ConfigurationSpace(seed=int(key[1]), space=space)
 
-    def from_hp_detail(self, key, hp_detail: Dict, new_params=None):
+        self.architecture_transformations = [
+            self.add_remove_cnn_layer,
+            self.add_remove_cnn_channels,
+            self.add_remove_cnn_kernel_size,
+            self.add_remove_cnn_stride,
+            self.add_remove_mlp_layer,
+            self.add_remove_mlp_neurons,
+        ]
+
+    def from_hp_detail(self, key, hp_detail: Dict, old_params=None):
         q = BaseDQN(
             hp_detail.get("cnn_n_layers", 0),
             hp_detail.get("cnn_n_channels", 0),
@@ -76,12 +86,14 @@ class HPGenerator:
             "best_action_fn": jax.jit(q.best_action),
         }
         params = q.q_network.init(key, jnp.zeros(self.observation_dim))
-        if new_params is not None:
-            params = jax.tree.map(
-                lambda new_weights, random_weights: jnp.where(new_weights == 0, random_weights, new_weights),
-                new_params,
-                params,
-            )
+        if old_params is not None:
+            for key_layer in params["params"]:
+                if key_layer not in old_params.get("layers_to_skip", []):
+                    params["params"][key_layer] = jax.tree.map(
+                        lambda old_weights, random_weights: jnp.where(old_weights == 0, random_weights, old_weights),
+                        old_params["params"][key_layer],
+                        params["params"][key_layer],
+                    )
 
         optimizer_state = optimizer.init(params)
 
@@ -128,82 +140,204 @@ class HPGenerator:
 
         return key, indices_new_hps, indices_replacing_hps
 
+    def add_remove_cnn_layer(self, hp_detail: Dict, params: Dict, plus_minus: int):
+        old_cnn_n_layers = hp_detail["cnn_n_layers"]
+        hp_detail["cnn_n_layers"] = np.clip(
+            hp_detail["cnn_n_layers"] + plus_minus,
+            self.config_space["cnn_n_layers"].lower,
+            self.config_space["cnn_n_layers"].upper,
+        )
+        cnn_layers_key = list(params["params"].keys())[: hp_detail["cnn_n_layers"]]
+        if hp_detail["cnn_n_layers"] < old_cnn_n_layers:
+            params["params"].pop(cnn_layers_key[-1])
+            params["params"]["layers_to_skip"] = [cnn_layers_key[-2]]
+        elif hp_detail["cnn_n_layers"] > old_cnn_n_layers:
+            last_key = cnn_layers_key[-1]
+            last_layer_number = last_key.split("_")[1]
+            new_layers_key = last_key.replace(last_layer_number, str(int(last_layer_number) + 1))
+            params["params"]["layers_to_skip"] = [last_key, new_layers_key]
+
+        if hp_detail["cnn_n_layers"] != old_cnn_n_layers:
+            params["params"]["layers_to_skip"].extend(list(params["params"].keys())[hp_detail["cnn_n_layers"] :])
+
+        return hp_detail, params
+
+    def add_remove_cnn_channels(self, hp_detail: Dict, params: Dict, plus_minus: int):
+        old_cnn_n_channels = hp_detail["cnn_n_channels"]
+        hp_detail["cnn_n_channels"] = np.clip(
+            hp_detail["cnn_n_channels"] + 4 * plus_minus,
+            self.config_space["cnn_n_channels"].lower,
+            self.config_space["cnn_n_channels"].upper,
+        )
+
+        def remove_channels(weights: jnp.ndarray):
+            # first CNN layer
+            if weights.ndim == 4 and weights.shape[2] != old_cnn_n_channels:
+                return weights[:, :, :, : hp_detail["cnn_n_channels"]]
+            elif weights.ndim == 4 and weights.shape[2] == old_cnn_n_channels:
+                return weights[:, :, : hp_detail["cnn_n_channels"], : hp_detail["cnn_n_channels"]]
+            else:
+                return weights[: hp_detail["cnn_n_channels"]]
+
+        def add_channels(weights: jnp.ndarray):
+            # first CNN layer
+            if weights.ndim == 4 and weights.shape[2] != old_cnn_n_channels:
+                new_weights = jnp.zeros(
+                    (weights.shape[0], weights.shape[1], weights.shape[2], hp_detail["cnn_kernel_size"])
+                )
+                return new_weights.at[:, :, :, :old_cnn_n_channels].set(weights)
+            elif weights.ndim == 4 and weights.shape[2] == old_cnn_n_channels:
+                new_weights = jnp.zeros(
+                    (weights.shape[0], weights.shape[1], hp_detail["cnn_kernel_size"], hp_detail["cnn_kernel_size"])
+                )
+                return new_weights.at[:, :, :old_cnn_n_channels, :old_cnn_n_channels].set(weights)
+            else:
+                return jnp.zeros(weights.shape[0]).at[:old_cnn_n_channels].set(weights)
+
+        if hp_detail["cnn_kernel_size"] < old_cnn_n_channels:
+            for cnn_key in list(list(params["params"].keys())[: hp_detail["cnn_n_layers"]]):
+                params["params"][cnn_key] = jax.tree.map(remove_channels, params["params"][cnn_key])
+        elif hp_detail["cnn_kernel_size"] > old_cnn_n_channels:
+            for cnn_key in list(list(params["params"].keys())[: hp_detail["cnn_n_layers"]]):
+                params["params"][cnn_key] = jax.tree.map(add_channels, params["params"][cnn_key])
+
+        if hp_detail["cnn_n_channels"] != old_cnn_n_channels:
+            params["params"]["layers_to_skip"] = list(params["params"].keys())[hp_detail["cnn_n_layers"] :]
+
+        return hp_detail, params
+
+    def add_remove_cnn_kernel_size(self, hp_detail: Dict, params: Dict, plus_minus: int):
+        old_cnn_kernel_size = hp_detail["cnn_kernel_size"]
+        hp_detail["cnn_kernel_size"] = np.clip(
+            hp_detail["cnn_kernel_size"] + plus_minus,
+            self.config_space["cnn_kernel_size"].lower,
+            self.config_space["cnn_kernel_size"].upper,
+        )
+
+        def reduce_kernel_size(weights: jnp.ndarray):
+            if weights.ndim == 4:
+                return weights[: hp_detail["cnn_kernel_size"], : hp_detail["cnn_kernel_size"]]
+            else:
+                return weights
+
+        def increase_kernel_size(weights: jnp.ndarray):
+            if weights.ndim == 4:
+                new_weights = jnp.zeros(
+                    (hp_detail["cnn_kernel_size"], hp_detail["cnn_kernel_size"], weights.shape[2], weights.shape[3])
+                )
+                return new_weights.at[:old_cnn_kernel_size, :old_cnn_kernel_size].set(weights)
+            else:
+                return weights
+
+        if hp_detail["cnn_kernel_size"] < old_cnn_kernel_size:
+            for cnn_key in list(list(params["params"].keys())[: hp_detail["cnn_n_layers"]]):
+                params["params"][cnn_key] = jax.tree.map(reduce_kernel_size, params["params"][cnn_key])
+        elif hp_detail["cnn_kernel_size"] > old_cnn_kernel_size:
+            for cnn_key in list(list(params["params"].keys())[: hp_detail["cnn_n_layers"]]):
+                params["params"][cnn_key] = jax.tree.map(increase_kernel_size, params["params"][cnn_key])
+
+        if hp_detail["cnn_kernel_size"] != old_cnn_kernel_size:
+            params["params"]["layers_to_skip"] = list(params["params"].keys())[hp_detail["cnn_n_layers"] :]
+
+        return hp_detail, params
+
+    def add_remove_cnn_stride(self, hp_detail: Dict, params: Dict, plus_minus: int):
+        old_cnn_stride = hp_detail["cnn_stride"]
+        hp_detail["cnn_stride"] = np.clip(
+            hp_detail["cnn_stride"] + plus_minus,
+            self.config_space["cnn_stride"].lower,
+            self.config_space["cnn_stride"].upper,
+        )
+
+        if hp_detail["cnn_stride"] != old_cnn_stride:
+            params["params"]["layers_to_skip"] = list(params["params"].keys())[hp_detail["cnn_n_layers"] :]
+
+        return hp_detail, params
+
+    def add_remove_mlp_layer(self, hp_detail: Dict, params: Dict, plus_minus: int):
+        old_mlp_n_layers = hp_detail["mlp_n_layers"]
+        hp_detail["mlp_n_layers"] = np.clip(
+            hp_detail["mlp_n_layers"] + plus_minus,
+            self.config_space["mlp_n_layers"].lower,
+            self.config_space["mlp_n_layers"].upper,
+        )
+        layers_key = list(params["params"].keys())
+        if hp_detail["mlp_n_layers"] < old_mlp_n_layers:
+            params["params"].pop(layers_key[-1])
+            params["params"]["layers_to_skip"] = [layers_key[-2]]
+        elif hp_detail["mlp_n_layers"] > old_mlp_n_layers:
+            last_key = layers_key[-1]
+            last_layer_number = last_key.split("_")[1]
+            new_layers_key = last_key.replace(last_layer_number, str(int(last_layer_number) + 1))
+            params["params"]["layers_to_skip"] = [last_key, new_layers_key]
+
+        return hp_detail, params
+
+    def add_remove_mlp_neurons(self, hp_detail: Dict, params: Dict, plus_minus: int):
+        old_mlp_n_neurons = hp_detail["mlp_n_neurons"]
+        hp_detail["mlp_n_neurons"] = np.clip(
+            hp_detail["mlp_n_neurons"] + plus_minus * 16,
+            self.config_space["mlp_n_neurons"].lower,
+            self.config_space["mlp_n_neurons"].upper,
+        )
+
+        def remove_neurons(weights: jnp.ndarray):
+            if weights.shape == (old_mlp_n_neurons, old_mlp_n_neurons):
+                return weights[: hp_detail["mlp_n_neurons"], : hp_detail["mlp_n_neurons"]]
+            elif weights.shape == (old_mlp_n_neurons,) or (weights.ndim == 2 and weights.shape[0] == old_mlp_n_neurons):
+                return weights[: hp_detail["mlp_n_neurons"]]
+            elif weights.ndim == 2 and weights.shape[1] == old_mlp_n_neurons:
+                return weights[:, : hp_detail["mlp_n_neurons"]]
+            else:
+                return weights
+
+        def add_neurons(weights: jnp.ndarray):
+            if weights.shape == (old_mlp_n_neurons, old_mlp_n_neurons):
+                new_weights = jnp.zeros((hp_detail["mlp_n_neurons"], hp_detail["mlp_n_neurons"]))
+                return new_weights.at[:old_mlp_n_neurons, :old_mlp_n_neurons].set(weights)
+            elif weights.ndim == 2 and weights.shape[0] == old_mlp_n_neurons:
+                new_weights = jnp.zeros((hp_detail["mlp_n_neurons"], weights.shape[1]))
+                return new_weights.at[:old_mlp_n_neurons, :].set(weights)
+            elif weights.ndim == 2 and weights.shape[1] == old_mlp_n_neurons:
+                new_weights = jnp.zeros((weights.shape[0], hp_detail["mlp_n_neurons"]))
+                return new_weights.at[:, :old_mlp_n_neurons].set(weights)
+            elif weights.shape == (old_mlp_n_neurons,):
+                return jnp.zeros(hp_detail["mlp_n_neurons"]).at[:old_mlp_n_neurons].set(weights)
+            else:
+                return weights
+
+        if hp_detail["mlp_n_neurons"] < old_mlp_n_neurons:
+            for mlp_key in list(list(params["params"].keys())[-hp_detail["mlp_n_layers"] :]):
+                params["params"][mlp_key] = jax.tree.map(remove_neurons, params["params"][mlp_key])
+        elif hp_detail["mlp_n_neurons"] > old_mlp_n_neurons:
+            for mlp_key in list(list(params["params"].keys())[-hp_detail["mlp_n_layers"] :]):
+                params["params"][mlp_key] = jax.tree.map(add_neurons, params["params"][mlp_key])
+
+        return hp_detail, params
+
     def explore(self, key, indices_new_hps, indices_replacing_hps, hp_fns, params, optimizer_states, hp_details):
         for idx in range(len(indices_new_hps)):
             new_hp_detail = hp_details[indices_replacing_hps[idx]].copy()
-            new_params = copy.deepcopy(params[indices_replacing_hps[idx]])
+            old_params = copy.deepcopy(params[indices_replacing_hps[idx]])
 
             key, explore_key, change_key = jax.random.split(key, 3)
             random_uniform = jax.random.uniform(explore_key)
 
             if random_uniform < 0.2:
-                key, plus_minus_key = jax.random.split(key)
+                key, plus_minus_key, transformation_key = jax.random.split(key, 3)
                 plus_minus = jax.random.choice(plus_minus_key, np.array([-1, 1]))
-                if jax.random.uniform(change_key) < 0.2:
-                    new_hp_detail["mlp_n_layers"] = np.clip(
-                        hp_details[indices_replacing_hps[idx]]["mlp_n_layers"] + plus_minus,
-                        self.config_space["mlp_n_layers"].lower,
-                        self.config_space["mlp_n_layers"].upper,
-                    )
-                    if new_hp_detail["mlp_n_layers"] < hp_details[indices_replacing_hps[idx]]["mlp_n_layers"]:
-                        layers_key = list(new_params["params"].keys())
-                        new_params["params"][layers_key[-2]] = jax.tree.map(
-                            lambda a: jnp.zeros_like(a), new_params["params"].pop(layers_key[-1])
-                        )
-                    elif new_hp_detail["mlp_n_layers"] > hp_details[indices_replacing_hps[idx]]["mlp_n_layers"]:
-                        layers_key = list(new_params["params"].keys())
-                        last_key = layers_key[-1]
-                        new_layers_key = last_key.replace(last_key.split("_")[1], str(int(last_key.split("_")[1]) + 1))
-                        new_params["params"][new_layers_key] = jax.tree.map(
-                            lambda a: jnp.zeros_like(a), new_params["params"][layers_key[-1]]
-                        )
-                        mlp_n_neurons = hp_details[indices_replacing_hps[idx]]["mlp_n_neurons"]
-                        new_params["params"][layers_key[-1]] = jax.tree.map(
-                            lambda a: jnp.zeros((mlp_n_neurons,) * a.ndim), new_params["params"][layers_key[-2]]
-                        )
-                else:
-                    new_hp_detail["mlp_n_neurons"] = np.clip(
-                        hp_details[indices_replacing_hps[idx]]["mlp_n_neurons"] + plus_minus * 16,
-                        self.config_space["mlp_n_neurons"].lower,
-                        self.config_space["mlp_n_neurons"].upper,
-                    )
-                    new_mlp_n_neurons = new_hp_detail["mlp_n_neurons"]
-                    mlp_n_neurons = hp_details[indices_replacing_hps[idx]]["mlp_n_neurons"]
-
-                    if new_mlp_n_neurons < mlp_n_neurons:
-
-                        def remove_neurons(weights: jnp.ndarray):
-                            if weights.shape == (mlp_n_neurons, mlp_n_neurons):
-                                return weights[:new_mlp_n_neurons, :new_mlp_n_neurons]
-                            elif weights.shape == (mlp_n_neurons,) or (
-                                weights.ndim == 2 and weights.shape[0] == mlp_n_neurons
-                            ):
-                                return weights[:new_mlp_n_neurons]
-                            elif weights.ndim == 2 and weights.shape[1] == mlp_n_neurons:
-                                return weights[:, :new_mlp_n_neurons]
-                            else:
-                                return weights
-
-                        new_params = jax.tree.map(remove_neurons, new_params)
-                    elif new_mlp_n_neurons > mlp_n_neurons:
-
-                        def add_neurons(weights: jnp.ndarray):
-                            if weights.shape == (mlp_n_neurons, mlp_n_neurons):
-                                new_weights = jnp.zeros((new_mlp_n_neurons, new_mlp_n_neurons))
-                                return new_weights.at[:mlp_n_neurons, :mlp_n_neurons].set(weights)
-                            elif weights.ndim == 2 and weights.shape[0] == mlp_n_neurons:
-                                new_weights = jnp.zeros((new_mlp_n_neurons, weights.shape[1]))
-                                return new_weights.at[:mlp_n_neurons, :].set(weights)
-                            elif weights.ndim == 2 and weights.shape[1] == mlp_n_neurons:
-                                new_weights = jnp.zeros((weights.shape[0], new_mlp_n_neurons))
-                                return new_weights.at[:, :mlp_n_neurons].set(weights)
-                            elif weights.shape == (mlp_n_neurons,):
-                                new_weights = jnp.zeros(new_mlp_n_neurons)
-                                return new_weights.at[:mlp_n_neurons].set(weights)
-                            else:
-                                return weights
-
-                        new_params = jax.tree.map(add_neurons, new_params)
+                idx_transformation = jax.random.choice(
+                    transformation_key,
+                    jnp.arange(6),
+                    p=(
+                        np.array([0.1, 0.4 / 3, 0.4 / 3, 0.4 / 3, 0.1, 0.4])
+                        if self.cnn
+                        else np.array([0, 0, 0, 0, 0.2, 0.8])
+                    ),
+                )
+                new_hp_detail, old_params = self.architecture_transformations[idx_transformation](
+                    new_hp_detail, old_params, plus_minus
+                )
 
             elif random_uniform < 0.4:
                 new_hp_detail["idx_activation"] = jax.random.randint(
@@ -228,7 +362,7 @@ class HPGenerator:
 
             key, hp_key = jax.random.split(key)
             hp_fns[indices_new_hps[idx]], params[indices_new_hps[idx]], optimizer_states[indices_new_hps[idx]] = (
-                self.from_hp_detail(hp_key, new_hp_detail, new_params)
+                self.from_hp_detail(hp_key, new_hp_detail, old_params)
             )
             hp_details[indices_new_hps[idx]] = new_hp_detail
 
@@ -260,7 +394,7 @@ class HPGenerator:
                 "idx_optimizer": self.hp_detail["idx_optimizer"],
                 "learning_rate": self.hp_detail["learning_rate"],
             }
-            if not (self.hp_space["cnn_n_layers_range"][0] == self.hp_space["cnn_n_layers_range"][1] == 0):
+            if self.cnn:
                 values["cnn_n_layers"] = self.hp_detail["cnn_n_layers"]
                 values["cnn_n_channels"] = self.hp_detail["cnn_n_channels"]
                 values["cnn_kernel_size"] = self.hp_detail["cnn_kernel_size"]
@@ -286,7 +420,7 @@ class HPGenerator:
             "idx_optimizer": job_info["config"]["idx_optimizer"],
             "learning_rate": job_info["config"]["learning_rate"],
         }
-        if not (self.hp_space["cnn_n_layers_range"][0] == self.hp_space["cnn_n_layers_range"][1] == 0):
+        if self.cnn:
             self.hp_detail["cnn_n_layers"] = job_info["config"]["cnn_n_layers"]
             self.hp_detail["cnn_n_channels"] = job_info["config"]["cnn_n_channels"]
             self.hp_detail["cnn_kernel_size"] = job_info["config"]["cnn_kernel_size"]
