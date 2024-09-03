@@ -1,37 +1,42 @@
-from typing import Callable, Sequence
+from typing import Callable
 
 import flax.linen as nn
 import jax.numpy as jnp
 
 
 class DQNNet(nn.Module):
-    features: Sequence[int]
-    activations: Sequence[Callable]
-    cnn: bool
+    cnn_n_layers: int
+    cnn_n_channels: int
+    cnn_kernel_size: int
+    cnn_stride: int
+    mlp_n_layers: int
+    mlp_n_neurons: int
+    activation: Callable
     n_actions: int
 
     @nn.compact
     def __call__(self, x):
-        if self.cnn:
-            initializer = nn.initializers.variance_scaling(scale=1.0, mode="fan_avg", distribution="truncated_normal")
-            x = self.activations[0](
-                nn.Conv(features=self.features[0], kernel_size=(8, 8), strides=(4, 4), kernel_init=initializer)(
-                    jnp.array(x, ndmin=4) / 255.0
-                )
-            )
-            x = self.activations[1](
-                nn.Conv(features=self.features[1], kernel_size=(4, 4), strides=(2, 2), kernel_init=initializer)(x)
-            )
-            x = self.activations[2](
-                nn.Conv(features=self.features[2], kernel_size=(3, 3), strides=(1, 1), kernel_init=initializer)(x)
-            )
-            x = x.reshape((x.shape[0], -1))
-        else:
+        if self.cnn_n_layers == 0:
             initializer = nn.initializers.lecun_normal()
+        else:
+            initializer = nn.initializers.variance_scaling(scale=1.0, mode="fan_avg", distribution="truncated_normal")
+            x = jnp.array(x, ndmin=4) / 255.0
+
+        for _ in range(self.cnn_n_layers):
+            x = self.activation(
+                nn.Conv(
+                    features=self.cnn_n_channels,
+                    kernel_size=(self.cnn_kernel_size, self.cnn_kernel_size),
+                    strides=(self.cnn_stride, self.cnn_stride),
+                    kernel_init=initializer,
+                )(x)
+            )
+        if self.cnn_n_layers > 0:
+            x = x.reshape((x.shape[0], -1))
 
         x = jnp.squeeze(x)
 
-        for idx_layer in range(3 if self.cnn else 0, len(self.features)):
-            x = self.activations[idx_layer]((nn.Dense(self.features[idx_layer], kernel_init=initializer)(x)))
+        for _ in range(self.mlp_n_layers):
+            x = self.activation((nn.Dense(self.mlp_n_neurons, kernel_init=initializer)(x)))
 
         return nn.Dense(self.n_actions, kernel_init=initializer)(x)

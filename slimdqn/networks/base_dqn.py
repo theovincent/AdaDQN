@@ -9,8 +9,28 @@ from slimdqn.sample_collection import IDX_RB
 
 
 class BaseDQN:
-    def __init__(self, features: List[int], activations: List[Callable], cnn: bool, n_actions: int, loss: Callable):
-        self.q_network = DQNNet(features, activations, cnn, n_actions)
+    def __init__(
+        self,
+        cnn_n_layers: int,
+        cnn_n_channels: int,
+        cnn_kernel_size: int,
+        cnn_stride: int,
+        mlp_n_layers: int,
+        mlp_n_neurons: int,
+        activation: Callable,
+        n_actions: int,
+        loss: Callable,
+    ):
+        self.q_network = DQNNet(
+            cnn_n_layers,
+            cnn_n_channels,
+            cnn_kernel_size,
+            cnn_stride,
+            mlp_n_layers,
+            mlp_n_neurons,
+            activation,
+            n_actions,
+        )
         self.loss = loss
 
     def value_and_grad(self, params: FrozenDict, targets, samples):

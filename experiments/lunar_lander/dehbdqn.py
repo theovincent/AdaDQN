@@ -30,10 +30,13 @@ def run(argvs=sys.argv[1:]):
         gamma=p["gamma"],
     )
     p["hp_space"] = {
-        "n_layers_range": p["n_layers_range"],
-        "n_neurons_range": p["n_neurons_range"],
+        "cnn_n_layers_range": p["cnn_n_layers_range"],
+        "cnn_n_channels_range": p["cnn_n_channels_range"],
+        "cnn_kernel_size_range": p["cnn_kernel_size_range"],
+        "cnn_stride_range": p["cnn_stride_range"],
+        "mlp_n_layers_range": p["mlp_n_layers_range"],
+        "mlp_n_neurons_range": p["mlp_n_neurons_range"],
         "activations": [ACTIVATIONS[key] for key in p["activations"]],
-        "cnn": False,
         "losses": [LOSSES[key] for key in p["losses"]],
         "optimizers": [OPTIMIZERS[key] for key in p["optimizers"]],
         "learning_rate_range": p["learning_rate_range"],

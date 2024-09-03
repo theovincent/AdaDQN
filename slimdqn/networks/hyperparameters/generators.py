@@ -1,3 +1,4 @@
+from typing import Dict
 from collections import Counter
 import copy
 import jax
@@ -16,29 +17,47 @@ class HPGenerator:
         self.hp_space = hp_space
         self.exploitation_type = exploitation_type
 
-        self.config_space = ConfigurationSpace(
-            seed=int(key[1]),
-            space={
-                "n_layers": Integer("n_layers", bounds=(hp_space["n_layers_range"][0], hp_space["n_layers_range"][1])),
-                "n_neurons": Integer(
-                    "n_neurons", bounds=(hp_space["n_neurons_range"][0], hp_space["n_neurons_range"][1])
-                ),
-                "idx_activation": Integer("idx_activation", bounds=(0, len(hp_space["activations"]) - 1)),
-                "idx_loss": Integer("idx_loss", bounds=(0, len(hp_space["losses"]) - 1)),
-                "idx_optimizer": Integer("idx_optimizer", bounds=(0, len(hp_space["optimizers"]) - 1)),
-                "learning_rate": Float(
-                    "learning_rate",
-                    bounds=(10 ** -hp_space["learning_rate_range"][0], 10 ** -hp_space["learning_rate_range"][1]),
-                    log=True,
-                ),
-            },
-        )
+        space = {
+            "mlp_n_layers": Integer(
+                "mlp_n_layers", bounds=(hp_space["mlp_n_layers_range"][0], hp_space["mlp_n_layers_range"][1])
+            ),
+            "mlp_n_neurons": Integer(
+                "mlp_n_neurons", bounds=(hp_space["mlp_n_neurons_range"][0], hp_space["mlp_n_neurons_range"][1])
+            ),
+            "idx_activation": Integer("idx_activation", bounds=(0, len(hp_space["activations"]) - 1)),
+            "idx_loss": Integer("idx_loss", bounds=(0, len(hp_space["losses"]) - 1)),
+            "idx_optimizer": Integer("idx_optimizer", bounds=(0, len(hp_space["optimizers"]) - 1)),
+            "learning_rate": Float(
+                "learning_rate",
+                bounds=(10 ** -hp_space["learning_rate_range"][0], 10 ** -hp_space["learning_rate_range"][1]),
+                log=True,
+            ),
+        }
+        if not (self.hp_space["cnn_n_layers_range"][0] == self.hp_space["cnn_n_layers_range"][1] == 0):
+            space["cnn_n_layers"] = Integer(
+                "cnn_n_layers", bounds=(hp_space["cnn_n_layers_range"][0], hp_space["cnn_n_layers_range"][1])
+            )
+            space["cnn_n_channels"] = Integer(
+                "cnn_n_channels", bounds=(hp_space["cnn_n_channels_range"][0], hp_space["cnn_n_channels_range"][1])
+            )
+            space["cnn_kernel_size"] = Integer(
+                "cnn_kernel_size", bounds=(hp_space["cnn_kernel_size_range"][0], hp_space["cnn_kernel_size_range"][1])
+            )
+            space["cnn_stride"] = Integer(
+                "cnn_stride", bounds=(hp_space["cnn_stride_range"][0], hp_space["cnn_stride_range"][1])
+            )
 
-    def from_hp_detail(self, key, hp_detail, new_params=None):
+        self.config_space = ConfigurationSpace(seed=int(key[1]), space=space)
+
+    def from_hp_detail(self, key, hp_detail: Dict, new_params=None):
         q = BaseDQN(
-            [hp_detail["n_neurons"]] * hp_detail["n_layers"],
-            [self.hp_space["activations"][hp_detail["idx_activation"]]] * hp_detail["n_layers"],
-            self.hp_space["cnn"],
+            hp_detail.get("cnn_n_layers", 0),
+            hp_detail.get("cnn_n_channels", 0),
+            hp_detail.get("cnn_kernel_size", 0),
+            hp_detail.get("cnn_stride", 0),
+            hp_detail["mlp_n_layers"],
+            hp_detail["mlp_n_neurons"],
+            self.hp_space["activations"][hp_detail["idx_activation"]],
             self.n_actions,
             self.hp_space["losses"][hp_detail["idx_loss"]],
         )
@@ -75,9 +94,9 @@ class HPGenerator:
 
         return hp_fn, params, optimizer_state, hp_detail
 
-    def exploit_and_explore(self, key, metrics, hp_fns, params, optimizer_states, hp_details):
+    def exploit(self, key, metrics):
         n_networks = len(metrics)
-        # exploit
+
         if self.exploitation_type == "elitism":
             # Make sure the best HP is kept
             selected_indices = [np.nanargmax(metrics)]
@@ -107,7 +126,9 @@ class HPGenerator:
             indices_new_hps = partition_indices[:cut_new_hps]
             indices_replacing_hps = partition_indices[cut_replacing_hps:]
 
-        # explore
+        return key, indices_new_hps, indices_replacing_hps
+
+    def explore(self, key, indices_new_hps, indices_replacing_hps, hp_fns, params, optimizer_states, hp_details):
         for idx in range(len(indices_new_hps)):
             new_hp_detail = hp_details[indices_replacing_hps[idx]].copy()
             new_params = copy.deepcopy(params[indices_replacing_hps[idx]])
@@ -119,64 +140,66 @@ class HPGenerator:
                 key, plus_minus_key = jax.random.split(key)
                 plus_minus = jax.random.choice(plus_minus_key, np.array([-1, 1]))
                 if jax.random.uniform(change_key) < 0.2:
-                    new_hp_detail["n_layers"] = np.clip(
-                        hp_details[indices_replacing_hps[idx]]["n_layers"] + plus_minus,
-                        self.config_space["n_layers"].lower,
-                        self.config_space["n_layers"].upper,
+                    new_hp_detail["mlp_n_layers"] = np.clip(
+                        hp_details[indices_replacing_hps[idx]]["mlp_n_layers"] + plus_minus,
+                        self.config_space["mlp_n_layers"].lower,
+                        self.config_space["mlp_n_layers"].upper,
                     )
-                    if new_hp_detail["n_layers"] < hp_details[indices_replacing_hps[idx]]["n_layers"]:
+                    if new_hp_detail["mlp_n_layers"] < hp_details[indices_replacing_hps[idx]]["mlp_n_layers"]:
                         layers_key = list(new_params["params"].keys())
                         new_params["params"][layers_key[-2]] = jax.tree.map(
                             lambda a: jnp.zeros_like(a), new_params["params"].pop(layers_key[-1])
                         )
-                    elif new_hp_detail["n_layers"] > hp_details[indices_replacing_hps[idx]]["n_layers"]:
+                    elif new_hp_detail["mlp_n_layers"] > hp_details[indices_replacing_hps[idx]]["mlp_n_layers"]:
                         layers_key = list(new_params["params"].keys())
                         last_key = layers_key[-1]
                         new_layers_key = last_key.replace(last_key.split("_")[1], str(int(last_key.split("_")[1]) + 1))
                         new_params["params"][new_layers_key] = jax.tree.map(
                             lambda a: jnp.zeros_like(a), new_params["params"][layers_key[-1]]
                         )
-                        n_neurons = hp_details[indices_replacing_hps[idx]]["n_neurons"]
+                        mlp_n_neurons = hp_details[indices_replacing_hps[idx]]["mlp_n_neurons"]
                         new_params["params"][layers_key[-1]] = jax.tree.map(
-                            lambda a: jnp.zeros((n_neurons,) * a.ndim), new_params["params"][layers_key[-2]]
+                            lambda a: jnp.zeros((mlp_n_neurons,) * a.ndim), new_params["params"][layers_key[-2]]
                         )
                 else:
-                    new_hp_detail["n_neurons"] = np.clip(
-                        hp_details[indices_replacing_hps[idx]]["n_neurons"] + plus_minus * 16,
-                        self.config_space["n_neurons"].lower,
-                        self.config_space["n_neurons"].upper,
+                    new_hp_detail["mlp_n_neurons"] = np.clip(
+                        hp_details[indices_replacing_hps[idx]]["mlp_n_neurons"] + plus_minus * 16,
+                        self.config_space["mlp_n_neurons"].lower,
+                        self.config_space["mlp_n_neurons"].upper,
                     )
-                    new_n_neurons = new_hp_detail["n_neurons"]
-                    n_neurons = hp_details[indices_replacing_hps[idx]]["n_neurons"]
+                    new_mlp_n_neurons = new_hp_detail["mlp_n_neurons"]
+                    mlp_n_neurons = hp_details[indices_replacing_hps[idx]]["mlp_n_neurons"]
 
-                    if new_n_neurons < n_neurons:
+                    if new_mlp_n_neurons < mlp_n_neurons:
 
                         def remove_neurons(weights: jnp.ndarray):
-                            if weights.shape == (n_neurons, n_neurons):
-                                return weights[:new_n_neurons, :new_n_neurons]
-                            elif weights.shape == (n_neurons,) or (weights.ndim == 2 and weights.shape[0] == n_neurons):
-                                return weights[:new_n_neurons]
-                            elif weights.ndim == 2 and weights.shape[1] == n_neurons:
-                                return weights[:, :new_n_neurons]
+                            if weights.shape == (mlp_n_neurons, mlp_n_neurons):
+                                return weights[:new_mlp_n_neurons, :new_mlp_n_neurons]
+                            elif weights.shape == (mlp_n_neurons,) or (
+                                weights.ndim == 2 and weights.shape[0] == mlp_n_neurons
+                            ):
+                                return weights[:new_mlp_n_neurons]
+                            elif weights.ndim == 2 and weights.shape[1] == mlp_n_neurons:
+                                return weights[:, :new_mlp_n_neurons]
                             else:
                                 return weights
 
                         new_params = jax.tree.map(remove_neurons, new_params)
-                    elif new_n_neurons > n_neurons:
+                    elif new_mlp_n_neurons > mlp_n_neurons:
 
                         def add_neurons(weights: jnp.ndarray):
-                            if weights.shape == (n_neurons, n_neurons):
-                                new_weights = jnp.zeros((new_n_neurons, new_n_neurons))
-                                return new_weights.at[:n_neurons, :n_neurons].set(weights)
-                            elif weights.ndim == 2 and weights.shape[0] == n_neurons:
-                                new_weights = jnp.zeros((new_n_neurons, weights.shape[1]))
-                                return new_weights.at[:n_neurons, :].set(weights)
-                            elif weights.ndim == 2 and weights.shape[1] == n_neurons:
-                                new_weights = jnp.zeros((weights.shape[0], new_n_neurons))
-                                return new_weights.at[:, :n_neurons].set(weights)
-                            elif weights.shape == (n_neurons,):
-                                new_weights = jnp.zeros(new_n_neurons)
-                                return new_weights.at[:n_neurons].set(weights)
+                            if weights.shape == (mlp_n_neurons, mlp_n_neurons):
+                                new_weights = jnp.zeros((new_mlp_n_neurons, new_mlp_n_neurons))
+                                return new_weights.at[:mlp_n_neurons, :mlp_n_neurons].set(weights)
+                            elif weights.ndim == 2 and weights.shape[0] == mlp_n_neurons:
+                                new_weights = jnp.zeros((new_mlp_n_neurons, weights.shape[1]))
+                                return new_weights.at[:mlp_n_neurons, :].set(weights)
+                            elif weights.ndim == 2 and weights.shape[1] == mlp_n_neurons:
+                                new_weights = jnp.zeros((weights.shape[0], new_mlp_n_neurons))
+                                return new_weights.at[:, :mlp_n_neurons].set(weights)
+                            elif weights.shape == (mlp_n_neurons,):
+                                new_weights = jnp.zeros(new_mlp_n_neurons)
+                                return new_weights.at[:mlp_n_neurons].set(weights)
                             else:
                                 return weights
 
@@ -211,6 +234,12 @@ class HPGenerator:
 
         return indices_new_hps, hp_fns, params, optimizer_states, hp_details
 
+    def exploit_and_explore(self, key, metrics, hp_fns, params, optimizer_states, hp_details):
+        explore_key, indices_new_hps, indices_replacing_hps = self.exploit(key, metrics)
+        return self.explore(
+            explore_key, indices_new_hps, indices_replacing_hps, hp_fns, params, optimizer_states, hp_details
+        )
+
     def dehb_init(self, min_n_epochs_per_hp, max_n_epochs_per_hp):
         self.meta_optimizer = DEHB(
             cs=self.config_space,
@@ -223,18 +252,21 @@ class HPGenerator:
 
     def dehb_sample(self, key, avg_return):
         if avg_return is not None:
+            values = {
+                "mlp_n_layers": self.hp_detail["mlp_n_layers"],
+                "mlp_n_neurons": self.hp_detail["mlp_n_neurons"],
+                "idx_activation": self.hp_detail["idx_activation"],
+                "idx_loss": self.hp_detail["idx_loss"],
+                "idx_optimizer": self.hp_detail["idx_optimizer"],
+                "learning_rate": self.hp_detail["learning_rate"],
+            }
+            if not (self.hp_space["cnn_n_layers_range"][0] == self.hp_space["cnn_n_layers_range"][1] == 0):
+                values["cnn_n_layers"] = self.hp_detail["cnn_n_layers"]
+                values["cnn_n_channels"] = self.hp_detail["cnn_n_channels"]
+                values["cnn_kernel_size"] = self.hp_detail["cnn_kernel_size"]
+                values["cnn_stride"] = self.hp_detail["cnn_stride"]
             job_info = {
-                "config": Configuration(
-                    self.config_space,
-                    values={
-                        "n_layers": self.hp_detail["n_layers"],
-                        "n_neurons": self.hp_detail["n_neurons"],
-                        "idx_activation": self.hp_detail["idx_activation"],
-                        "idx_loss": self.hp_detail["idx_loss"],
-                        "idx_optimizer": self.hp_detail["idx_optimizer"],
-                        "learning_rate": self.hp_detail["learning_rate"],
-                    },
-                ),
+                "config": Configuration(self.config_space, values=values),
                 "fidelity": self.hp_extra_detail["fidelity"],
                 "parent_id": self.hp_extra_detail["parent_id"],
                 "config_id": self.hp_extra_detail["config_id"],
@@ -247,13 +279,18 @@ class HPGenerator:
         job_info = self.meta_optimizer.ask()
 
         self.hp_detail = {
-            "n_layers": job_info["config"]["n_layers"],
-            "n_neurons": job_info["config"]["n_neurons"],
+            "mlp_n_layers": job_info["config"]["mlp_n_layers"],
+            "mlp_n_neurons": job_info["config"]["mlp_n_neurons"],
             "idx_activation": job_info["config"]["idx_activation"],
             "idx_loss": job_info["config"]["idx_loss"],
             "idx_optimizer": job_info["config"]["idx_optimizer"],
             "learning_rate": job_info["config"]["learning_rate"],
         }
+        if not (self.hp_space["cnn_n_layers_range"][0] == self.hp_space["cnn_n_layers_range"][1] == 0):
+            self.hp_detail["cnn_n_layers"] = job_info["config"]["cnn_n_layers"]
+            self.hp_detail["cnn_n_channels"] = job_info["config"]["cnn_n_channels"]
+            self.hp_detail["cnn_kernel_size"] = job_info["config"]["cnn_kernel_size"]
+            self.hp_detail["cnn_stride"] = job_info["config"]["cnn_stride"]
 
         hp_fn, params, optimizer_state = self.from_hp_detail(key, self.hp_detail)
 

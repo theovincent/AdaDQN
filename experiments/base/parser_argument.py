@@ -121,18 +121,50 @@ def add_base_arguments(parser: argparse.ArgumentParser):
     )
     # HP search space
     parser.add_argument(
-        "-nlr",
-        "--n_layers_range",
+        "-cnlr",
+        "--cnn_n_layers_range",
         nargs=2,
-        help="Range of the number of layers.",
+        help="Range of the number of layers of the CNNs.",
+        type=int,
+        default=[0, 0],
+    )
+    parser.add_argument(
+        "-cncr",
+        "--cnn_n_channels_range",
+        nargs=2,
+        help="Range of the number of channels per layer of the CNNs.",
+        type=int,
+        default=[0, 0],
+    )
+    parser.add_argument(
+        "-cksr",
+        "--cnn_kernel_size_range",
+        nargs=2,
+        help="Range of the kernel size per layer of the CNNs.",
+        type=int,
+        default=[0, 0],
+    )
+    parser.add_argument(
+        "-csr",
+        "--cnn_stride_range",
+        nargs=2,
+        help="Range of the stride per layer of the CNNs.",
+        type=int,
+        default=[0, 0],
+    )
+    parser.add_argument(
+        "-mnlr",
+        "--mlp_n_layers_range",
+        nargs=2,
+        help="Range of the number of layers of the MLP.",
         type=int,
         default=[1, 3],
     )
     parser.add_argument(
-        "-nnr",
-        "--n_neurons_range",
+        "-mnnr",
+        "--mlp_n_neurons_range",
         nargs=2,
-        help="Range of the number of neurons per layers.",
+        help="Range of the number of neurons per layer of the MLP.",
         type=int,
         default=[50, 200],
     )

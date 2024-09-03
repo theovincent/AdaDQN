@@ -10,7 +10,7 @@ class TestLunarLander(unittest.TestCase):
         self.base_args = (
             "--seed 1 --disable_wandb --replay_buffer_capacity 100 --batch_size 3 --update_horizon 1 --gamma 0.99 "
             + "--horizon 10 --n_epochs 3 --n_training_steps_per_epoch 5 --update_to_data 3 "
-            + "--target_update_frequency 3 --n_initial_samples 3 --n_layers_range 1 5 --n_neurons_range 25 200 "
+            + "--target_update_frequency 3 --n_initial_samples 3 --mlp_n_layers_range 1 5 --mlp_n_neurons_range 25 200 "
             + "--activations celu elu tanh --losses huber l1 --optimizers adagrad nadam --learning_rate_range 4 2"
         )
 
