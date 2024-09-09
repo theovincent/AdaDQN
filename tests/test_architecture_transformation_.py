@@ -23,12 +23,12 @@ class TestLunarLander(unittest.TestCase):
             "optimizers": list(OPTIMIZERS.values()),
             "learning_rate_range": [6, 2],
         }
-        self.hp_generator = HPGenerator(jax.random.PRNGKey(0), (10, 10, 4), 7, hp_space, "elitsm")
+        self.np_key = np.random.randint(1000)
+        self.hp_generator = HPGenerator(jax.random.PRNGKey(self.np_key), (10, 10, 4), 7, hp_space, "elitsm")
 
-        _, self.params, _, self.hp_detail = self.hp_generator.sample(jax.random.PRNGKey(0))
+        _, self.params, _, self.hp_detail = self.hp_generator.sample(jax.random.PRNGKey(self.np_key))
 
     def test_add_cnn_layer(self):
-        print(self.hp_detail["cnn_n_layers"] + 1)
         new_hp_detail, new_params = self.hp_generator.add_remove_cnn_layer(
             copy.deepcopy(self.hp_detail), self.params.copy(), 1
         )
@@ -38,10 +38,14 @@ class TestLunarLander(unittest.TestCase):
         )
 
         assert new_hp_detail["cnn_n_layers"] == new_cnn_n_layers, "No CNN layer has been added."
-        assert f"Conv_{new_cnn_n_layers - 1}" in new_params["params"].keys(), "No CNN layer has been added."
+        assert f"Conv_{new_cnn_n_layers - 1}" in new_params["layers_to_skip"], "No CNN layer has been added."
 
         try:
-            self.hp_generator.from_hp_detail(jax.random.PRNGKey(0), new_hp_detail, new_params)
+            _, new_params, _ = self.hp_generator.from_hp_detail(
+                jax.random.PRNGKey(self.np_key), new_hp_detail, new_params
+            )
+            new_hp_detail, new_params = self.hp_generator.add_remove_cnn_layer(new_hp_detail, new_params, 1)
+            self.hp_generator.from_hp_detail(jax.random.PRNGKey(self.np_key), new_hp_detail, new_params)
         except Exception as e:
             assert 0, f"The exception {type(e).__name__} is raised. Exception: {e}"
 
@@ -55,9 +59,12 @@ class TestLunarLander(unittest.TestCase):
         )
 
         assert new_hp_detail["cnn_n_layers"] == new_cnn_n_layers, "No CNN layer has been removed."
-        assert f"Conv_{new_cnn_n_layers}" not in new_params["params"].keys(), "No CNN layer has been removed."
 
         try:
-            self.hp_generator.from_hp_detail(jax.random.PRNGKey(0), new_hp_detail, new_params)
+            _, new_params, _ = self.hp_generator.from_hp_detail(
+                jax.random.PRNGKey(self.np_key), new_hp_detail, new_params
+            )
+            new_hp_detail, new_params = self.hp_generator.add_remove_cnn_layer(new_hp_detail, new_params, -1)
+            self.hp_generator.from_hp_detail(jax.random.PRNGKey(self.np_key), new_hp_detail, new_params)
         except Exception as e:
             assert 0, f"The exception {type(e).__name__} is raised. Exception: {e}"

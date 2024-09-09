@@ -147,18 +147,20 @@ class HPGenerator:
             self.config_space["cnn_n_layers"].lower,
             self.config_space["cnn_n_layers"].upper,
         )
-        cnn_layers_key = list(params["params"].keys())[: hp_detail["cnn_n_layers"]]
+        cnn_layers_key = sorted([layer for layer in params["params"].keys() if layer.startswith("Conv")])
         if hp_detail["cnn_n_layers"] < old_cnn_n_layers:
             params["params"].pop(cnn_layers_key[-1])
-            params["params"]["layers_to_skip"] = [cnn_layers_key[-2]]
+            params["layers_to_skip"] = []
         elif hp_detail["cnn_n_layers"] > old_cnn_n_layers:
             last_key = cnn_layers_key[-1]
             last_layer_number = last_key.split("_")[1]
             new_layers_key = last_key.replace(last_layer_number, str(int(last_layer_number) + 1))
-            params["params"]["layers_to_skip"] = [last_key, new_layers_key]
+            params["layers_to_skip"] = [new_layers_key]
 
         if hp_detail["cnn_n_layers"] != old_cnn_n_layers:
-            params["params"]["layers_to_skip"].extend(list(params["params"].keys())[hp_detail["cnn_n_layers"] :])
+            params["layers_to_skip"].extend(
+                [layer_key for layer_key in params["params"].keys() if layer_key.startswith("Dense")]
+            )
 
         return hp_detail, params
 
@@ -194,15 +196,18 @@ class HPGenerator:
             else:
                 return jnp.zeros(weights.shape[0]).at[:old_cnn_n_channels].set(weights)
 
+        cnn_layers_key = sorted([layer for layer in params["params"].keys() if layer.startswith("Conv")])
         if hp_detail["cnn_kernel_size"] < old_cnn_n_channels:
-            for cnn_key in list(list(params["params"].keys())[: hp_detail["cnn_n_layers"]]):
+            for cnn_key in cnn_layers_key:
                 params["params"][cnn_key] = jax.tree.map(remove_channels, params["params"][cnn_key])
         elif hp_detail["cnn_kernel_size"] > old_cnn_n_channels:
-            for cnn_key in list(list(params["params"].keys())[: hp_detail["cnn_n_layers"]]):
+            for cnn_key in cnn_layers_key:
                 params["params"][cnn_key] = jax.tree.map(add_channels, params["params"][cnn_key])
 
         if hp_detail["cnn_n_channels"] != old_cnn_n_channels:
-            params["params"]["layers_to_skip"] = list(params["params"].keys())[hp_detail["cnn_n_layers"] :]
+            params["layers_to_skip"] = [
+                layer_key for layer_key in params["params"].keys() if layer_key.startswith("Dense")
+            ]
 
         return hp_detail, params
 
@@ -229,15 +234,18 @@ class HPGenerator:
             else:
                 return weights
 
+        cnn_layers_key = sorted([layer for layer in params["params"].keys() if layer.startswith("Conv")])
         if hp_detail["cnn_kernel_size"] < old_cnn_kernel_size:
-            for cnn_key in list(list(params["params"].keys())[: hp_detail["cnn_n_layers"]]):
+            for cnn_key in cnn_layers_key:
                 params["params"][cnn_key] = jax.tree.map(reduce_kernel_size, params["params"][cnn_key])
         elif hp_detail["cnn_kernel_size"] > old_cnn_kernel_size:
-            for cnn_key in list(list(params["params"].keys())[: hp_detail["cnn_n_layers"]]):
+            for cnn_key in cnn_layers_key:
                 params["params"][cnn_key] = jax.tree.map(increase_kernel_size, params["params"][cnn_key])
 
         if hp_detail["cnn_kernel_size"] != old_cnn_kernel_size:
-            params["params"]["layers_to_skip"] = list(params["params"].keys())[hp_detail["cnn_n_layers"] :]
+            params["layers_to_skip"] = [
+                layer_key for layer_key in params["params"].keys() if layer_key.startswith("Dense")
+            ]
 
         return hp_detail, params
 
@@ -250,7 +258,9 @@ class HPGenerator:
         )
 
         if hp_detail["cnn_stride"] != old_cnn_stride:
-            params["params"]["layers_to_skip"] = list(params["params"].keys())[hp_detail["cnn_n_layers"] :]
+            params["layers_to_skip"] = [
+                layer_key for layer_key in params["params"].keys() if layer_key.startswith("Dense")
+            ]
 
         return hp_detail, params
 
@@ -261,15 +271,15 @@ class HPGenerator:
             self.config_space["mlp_n_layers"].lower,
             self.config_space["mlp_n_layers"].upper,
         )
-        layers_key = list(params["params"].keys())
+        mlp_layers_key = sorted([layer for layer in params["params"].keys() if layer.startswith("Dense")])
         if hp_detail["mlp_n_layers"] < old_mlp_n_layers:
-            params["params"].pop(layers_key[-1])
-            params["params"]["layers_to_skip"] = [layers_key[-2]]
+            params["params"].pop(mlp_layers_key[-1])
+            params["layers_to_skip"] = [mlp_layers_key[-2]]
         elif hp_detail["mlp_n_layers"] > old_mlp_n_layers:
-            last_key = layers_key[-1]
+            last_key = mlp_layers_key[-1]
             last_layer_number = last_key.split("_")[1]
             new_layers_key = last_key.replace(last_layer_number, str(int(last_layer_number) + 1))
-            params["params"]["layers_to_skip"] = [last_key, new_layers_key]
+            params["layers_to_skip"] = [last_key, new_layers_key]
 
         return hp_detail, params
 
@@ -306,11 +316,12 @@ class HPGenerator:
             else:
                 return weights
 
+        mlp_layers_key = sorted([layer for layer in params["params"].keys() if layer.startswith("Dense")])
         if hp_detail["mlp_n_neurons"] < old_mlp_n_neurons:
-            for mlp_key in list(list(params["params"].keys())[-hp_detail["mlp_n_layers"] :]):
+            for mlp_key in mlp_layers_key:
                 params["params"][mlp_key] = jax.tree.map(remove_neurons, params["params"][mlp_key])
         elif hp_detail["mlp_n_neurons"] > old_mlp_n_neurons:
-            for mlp_key in list(list(params["params"].keys())[-hp_detail["mlp_n_layers"] :]):
+            for mlp_key in mlp_layers_key:
                 params["params"][mlp_key] = jax.tree.map(add_neurons, params["params"][mlp_key])
 
         return hp_detail, params
@@ -318,7 +329,7 @@ class HPGenerator:
     def explore(self, key, indices_new_hps, indices_replacing_hps, hp_fns, params, optimizer_states, hp_details):
         for idx in range(len(indices_new_hps)):
             new_hp_detail = hp_details[indices_replacing_hps[idx]].copy()
-            old_params = copy.deepcopy(params[indices_replacing_hps[idx]])
+            old_params = {"params": copy.deepcopy(params[indices_replacing_hps[idx]]["params"])}
 
             key, explore_key, change_key = jax.random.split(key, 3)
             random_uniform = jax.random.uniform(explore_key)
