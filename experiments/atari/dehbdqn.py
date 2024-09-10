@@ -4,11 +4,13 @@ import sys
 import jax
 import numpy as np
 
-from experiments.base.dqn import train
+from experiments.base.individual_dqn import train
 from experiments.base.utils import prepare_logs
 from slimdqn.environments.atari import AtariEnv
-from slimdqn.networks.dqn import DQN
+from slimdqn.networks.individual_dqn import DEHBDQN
 from slimdqn.sample_collection.replay_buffer import ReplayBuffer
+
+from slimdqn.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
 
 
 def run(argvs=sys.argv[1:]):
@@ -34,19 +36,31 @@ def run(argvs=sys.argv[1:]):
         action_dtype=np.int32,
         reward_dtype=np.float32,
     )
-    agent = DQN(
+    p["hp_space"] = {
+        "cnn_n_layers_range": p["cnn_n_layers_range"],
+        "cnn_n_channels_range": p["cnn_n_channels_range"],
+        "cnn_kernel_size_range": p["cnn_kernel_size_range"],
+        "cnn_stride_range": p["cnn_stride_range"],
+        "mlp_n_layers_range": p["mlp_n_layers_range"],
+        "mlp_n_neurons_range": p["mlp_n_neurons_range"],
+        "activations": [ACTIVATIONS[key] for key in p["activations"]],
+        "losses": [LOSSES[key] for key in p["losses"]],
+        "optimizers": [OPTIMIZERS[key] for key in p["optimizers"]],
+        "learning_rate_range": p["learning_rate_range"],
+    }
+    agent = DEHBDQN(
         q_key,
         (env.state_height, env.state_width, env.n_stacked_frames),
         env.n_actions,
-        features=p["features"],
-        cnn=True,
-        learning_rate=p["learning_rate"],
+        hp_space=p["hp_space"],
         gamma=p["gamma"],
         update_horizon=p["update_horizon"],
         update_to_data=p["update_to_data"],
         target_update_frequency=p["target_update_frequency"],
-        adam_eps=1.5e-4,
+        min_n_epochs_per_hp=p["min_n_epochs_per_hp"],
+        max_n_epochs_per_hp=p["max_n_epochs_per_hp"],
     )
+
     train(train_key, p, agent, env, rb)
 
 

@@ -34,8 +34,7 @@ class TestLunarLander(unittest.TestCase):
     def test_adadqn(self):
         self.run_core_test(
             "adadqn",
-            "--n_networks 5 --exploitation_type elitism --epsilon_end 0.01 "
-            + "--epsilon_duration 4 --hp_update_frequency 3",
+            "--n_networks 5 --exploitation_type elitism --epsilon_end 0.01 --epsilon_duration 4 --hp_update_frequency 3",
         )
 
     def test_searldqn(self):
