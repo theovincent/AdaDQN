@@ -22,6 +22,7 @@ class TestTransformations(unittest.TestCase):
             "losses": list(LOSSES.values()),
             "optimizers": list(OPTIMIZERS.values()),
             "learning_rate_range": [6, 2],
+            "reset_weights": False,
         }
         self.np_key = np.random.randint(1000)
         self.hp_generator = HPGenerator(jax.random.PRNGKey(self.np_key), (10, 10, 4), 7, hp_space, "elitsm")

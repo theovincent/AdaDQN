@@ -40,6 +40,7 @@ def run(argvs=sys.argv[1:]):
         "losses": [LOSSES[key] for key in p["losses"]],
         "optimizers": [OPTIMIZERS[key] for key in p["optimizers"]],
         "learning_rate_range": p["learning_rate_range"],
+        "reset_weights": True,
     }
     agent = RSDQN(
         q_key,

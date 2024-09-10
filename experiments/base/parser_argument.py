@@ -221,6 +221,13 @@ def add_parallel_training_arguments(parser: argparse.ArgumentParser):
         choices=["elitism", "truncation"],
         default="elitism",
     )
+    parser.add_argument(
+        "-r",
+        "--reset_weights",
+        help="Reset the network weights for each new generation.",
+        default=False,
+        action="store_true",
+    )
 
 
 def add_epsilon_arguments(parser: argparse.ArgumentParser):

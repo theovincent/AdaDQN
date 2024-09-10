@@ -16,6 +16,7 @@ class HPGenerator:
         self.n_actions = n_actions
         self.hp_space = hp_space
         self.exploitation_type = exploitation_type
+        self.reset_weights = self.hp_space["reset_weights"]
         self.cnn = not (self.hp_space["cnn_n_layers_range"][0] == self.hp_space["cnn_n_layers_range"][1] == 0)
 
         space = {
@@ -86,7 +87,7 @@ class HPGenerator:
             "best_action_fn": jax.jit(q.best_action),
         }
         params = q.q_network.init(key, jnp.zeros(self.observation_dim))
-        if old_params is not None:
+        if old_params is not None and not self.reset_weights:
             for key_layer in params["params"]:
                 if key_layer not in old_params.get("layers_to_skip", []):
                     params["params"][key_layer] = jax.tree.map(
