@@ -185,22 +185,22 @@ class HPGenerator:
             # first CNN layer
             if weights.ndim == 4 and weights.shape[2] != old_cnn_n_channels:
                 new_weights = jnp.zeros(
-                    (weights.shape[0], weights.shape[1], weights.shape[2], hp_detail["cnn_kernel_size"])
+                    (weights.shape[0], weights.shape[1], weights.shape[2], hp_detail["cnn_n_channels"])
                 )
                 return new_weights.at[:, :, :, :old_cnn_n_channels].set(weights)
             elif weights.ndim == 4 and weights.shape[2] == old_cnn_n_channels:
                 new_weights = jnp.zeros(
-                    (weights.shape[0], weights.shape[1], hp_detail["cnn_kernel_size"], hp_detail["cnn_kernel_size"])
+                    (weights.shape[0], weights.shape[1], hp_detail["cnn_n_channels"], hp_detail["cnn_n_channels"])
                 )
                 return new_weights.at[:, :, :old_cnn_n_channels, :old_cnn_n_channels].set(weights)
             else:
-                return jnp.zeros(weights.shape[0]).at[:old_cnn_n_channels].set(weights)
+                return jnp.zeros(hp_detail["cnn_n_channels"]).at[:old_cnn_n_channels].set(weights)
 
         cnn_layers_key = sorted([layer for layer in params["params"].keys() if layer.startswith("Conv")])
-        if hp_detail["cnn_kernel_size"] < old_cnn_n_channels:
+        if hp_detail["cnn_n_channels"] < old_cnn_n_channels:
             for cnn_key in cnn_layers_key:
                 params["params"][cnn_key] = jax.tree.map(remove_channels, params["params"][cnn_key])
-        elif hp_detail["cnn_kernel_size"] > old_cnn_n_channels:
+        elif hp_detail["cnn_n_channels"] > old_cnn_n_channels:
             for cnn_key in cnn_layers_key:
                 params["params"][cnn_key] = jax.tree.map(add_channels, params["params"][cnn_key])
 
