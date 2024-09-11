@@ -36,11 +36,19 @@ class TestAtari(unittest.TestCase):
             "adadqn",
             "--n_networks 5 --exploitation_type elitism --epsilon_end 0.01 --epsilon_duration 4 --hp_update_frequency 3",
         )
+        self.run_core_test(
+            "adadqn",
+            "--n_networks 5 --exploitation_type elitism --epsilon_end 0.01 --epsilon_duration 4 --hp_update_frequency 3 --reset_weights",
+        )
 
     def test_searldqn(self):
         self.run_core_test(
             "searldqn",
             "--n_networks 5 --exploitation_type elitism --min_steps_evaluation 1 --training_proportion 0.8",
+        )
+        self.run_core_test(
+            "searldqn",
+            "--n_networks 5 --exploitation_type elitism --min_steps_evaluation 1 --training_proportion 0.8 --reset_weights",
         )
 
     def test_rsdqn(self):

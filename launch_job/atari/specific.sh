@@ -7,7 +7,7 @@ SHARED_ARGS="--first_seed 1 --last_seed 3 --n_parallel_seeds 2 --replay_buffer_c
 
 for TARGET_UPDATE_FREQUENCY in 1000 4000 8000
 do
-    for HP_UPDATE_FREQUENCY_FACTOR in 10 30 60
+    for HP_UPDATE_FREQUENCY_FACTOR in 10 20 30
     do
         HP_UPDATE_FREQUENCY=$(( $HP_UPDATE_FREQUENCY_FACTOR * $TARGET_UPDATE_FREQUENCY ))
         for EXPLOITATION_TYPE in elitism truncation
@@ -30,16 +30,29 @@ do
     done
 done
 
-# for MIN_STEPS_EVALUATION in 400 1000 2000
-# do
-#     launch_job/atari/cluster_searldqn.sh --experiment_name min_steps_eval_$MIN_STEPS_EVALUATION\_elitism_no_reset \
-#         $SHARED_ARGS --n_epochs 50 --n_networks 5 --exploitation_type elitism --min_steps_evaluation $MIN_STEPS_EVALUATION \
-#         --training_proportion 0.5
 
-#     launch_job/atari/cluster_searldqn.sh --experiment_name min_steps_eval_$MIN_STEPS_EVALUATION\_truncation_no_reset \
-#         $SHARED_ARGS --n_epochs 50 --n_networks 5 --exploitation_type truncation --min_steps_evaluation $MIN_STEPS_EVALUATION \
-#         --training_proportion 0.5
-#     sleep 15 min
+# for TARGET_UPDATE_FREQUENCY in 1000 4000 8000
+# do
+#     for MIN_STEPS_EVALUATION in 200 1000 5000
+#     do
+#         for EXPLOITATION_TYPE in elitism truncation
+#         do
+#             for RESET_MODE in reset no_reset
+#             do
+#                 if [[ $RESET_MODE = "reset" ]]
+#                 then
+#                     RESET_FLAG="--reset_weights"
+#                 else
+#                     RESET_FLAG=""
+#                 fi
+#                 launch_job/atari/cluster_searldqn.sh --experiment_name tuf_$TARGET_UPDATE_FREQUENCY\_mse_$MIN_STEPS_EVALUATION\_tp_1_$EXPLOITATION_TYPE\_$RESET_MODE\_Pong \
+#                     $SHARED_ARGS --target_update_freq $TARGET_UPDATE_FREQUENCY --n_epochs 10 --n_networks 5 \
+#                     --exploitation_type $EXPLOITATION_TYPE --min_steps_evaluation $MIN_STEPS_EVALUATION \
+#                     --training_proportion 1 $RESET_FLAG
+#             done
+#         done
+#         sleep 10m
+#     done
 # done
 
 # launch_job/atari/cluster_rsdqn.sh --experiment_name ne30 $SHARED_ARGS --n_epochs 300 --epsilon_end 0.01 \
