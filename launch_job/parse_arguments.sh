@@ -41,11 +41,6 @@ function parse_arguments() {
                 GPU=true
                 shift
                 ;;
-            -?*)
-                ARGS="$ARGS $1 $2"
-                shift
-                shift
-                ;;
             ?*)
                 ARGS="$ARGS $1"
                 shift
