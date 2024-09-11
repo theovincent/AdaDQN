@@ -44,7 +44,7 @@ class AtariEnv:
 
         self.n_steps = 0
 
-        self.env.ale.getScreenGrayscale(self.screen_buffer[0])
+        self.env.unwrapped.ale.getScreenGrayscale(self.screen_buffer[0])
         self.screen_buffer[1].fill(0)
 
         self.state_ = np.zeros((self.state_height, self.state_width, self.n_stacked_frames), dtype=np.uint8)
@@ -60,7 +60,7 @@ class AtariEnv:
 
             if idx_frame >= self.n_skipped_frames - 2:
                 t = idx_frame - (self.n_skipped_frames - 2)
-                self.env.ale.getScreenGrayscale(self.screen_buffer[t])
+                self.env.unwrapped.ale.getScreenGrayscale(self.screen_buffer[t])
 
             if terminal:
                 break
