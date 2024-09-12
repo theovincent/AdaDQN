@@ -10,7 +10,7 @@ fi
 
 tmux send-keys -t slimdqn "source env_gpu/bin/activate" ENTER
 
-MEM_FRACTION=$(echo "scale=2 ; 0.85 / $((FIRST_SEED - LAST_SEED + 1))" | bc)
+MEM_FRACTION=$(echo "scale=2 ; 0.85 / $((LAST_SEED - FIRST_SEED + 1))" | bc)
 tmux send-keys -t slimdqn "export XLA_PYTHON_CLIENT_MEM_FRACTION=$MEM_FRACTION" ENTER
 
 echo "launch train $ALGO_NAME local"
