@@ -37,10 +37,6 @@ function parse_arguments() {
                 shift
                 shift
                 ;;
-            -gpu)
-                GPU=true
-                shift
-                ;;
             ?*)
                 ARGS="$ARGS $1"
                 shift
@@ -57,11 +53,6 @@ function parse_arguments() {
         echo "you need to specify --first_seed and --last_seed and make to sure that first_seed <= last_seed" >&2
         exit 1
     fi
-    if [[ $GPU == "" ]]
-    then
-        GPU=false
-    fi
 
     [ -d experiments/$ENV_NAME/logs/$EXPERIMENT_NAME/$ALGO_NAME ] || mkdir -p experiments/$ENV_NAME/logs/$EXPERIMENT_NAME/$ALGO_NAME
-
 }

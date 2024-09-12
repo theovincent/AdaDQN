@@ -4,16 +4,11 @@ source launch_job/parse_arguments.sh
 parse_arguments $@
 
 if ! tmux has-session -t adadqn; then
-    tmux new-session -d --seed adadqn
+    tmux new-session -d -s adadqn
     echo "Created new tmux session - adadqn"
 fi
 
-if [[ $GPU = true ]]
-then
-    tmux send-keys -t adadqn "source env_gpu/bin/activate" ENTER
-else
-    tmux send-keys -t adadqn "source env_cpu/bin/activate" ENTER
-fi
+tmux send-keys -t adadqn "source env_cpu/bin/activate" ENTER
 
 echo "launch train $ALGO_NAME local"
 for (( seed=$FIRST_SEED; seed<=$LAST_SEED; seed++ ))
