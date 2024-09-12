@@ -61,15 +61,15 @@ SHARED_ARGS="--replay_buffer_capacity 1_000_000 --batch_size 32 --update_horizon
 #     done
 # done
 
-RSDQN_ARGS="--experiment_name hpupe_10 $SHARED_ARGS --n_epochs 100 --epsilon_end 0.01 --epsilon_duration 250_000 \
-    --hp_update_per_epoch 10"
+RSDQN_ARGS="--experiment_name hpupe_10_Pong $SHARED_ARGS --target_update_freq 8000 --n_epochs 100 \
+    --epsilon_end 0.01 --epsilon_duration 250_000 --hp_update_per_epoch 10"
 launch_job/atari/local_rsdqn.sh --first_seed 1 --last_seed 2 $RSDQN_ARGS
 launch_job/atari/local_rsdqn.sh --first_seed 3 --last_seed 5 $RSDQN_ARGS
 # launch_job/atari/cluster_rsdqn.sh --first_seed 1 --last_seed 2 --n_parallel_seeds 2 $RSDQN_ARGS
 # launch_job/atari/cluster_rsdqn.sh --first_seed 5 --last_seed 5 --n_parallel_seeds 1 $RSDQN_ARGS
 
-# DEHBDQN_ARGS="--experiment_name minnephp_5_maxnephp_15 $SHARED_ARGS --n_epochs 100 --epsilon_end 0.01 --epsilon_duration 250_000 \
-#     --min_n_epochs_per_hp 5 --max_n_epochs_per_hp 15"
+# DEHBDQN_ARGS="--experiment_name minnephp_5_maxnephp_15_Pong $SHARED_ARGS --target_update_freq 8000 --n_epochs 100 \
+#     --epsilon_end 0.01 --epsilon_duration 250_000 --min_n_epochs_per_hp 5 --max_n_epochs_per_hp 15"
 # launch_job/atari/local_dehbdqn.sh --first_seed 1 --last_seed 2 $DEHBDQN_ARGS
 # launch_job/atari/local_dehbdqn.sh --first_seed 3 --last_seed 5 $DEHBDQN_ARGS
 # launch_job/atari/cluster_dehbdqn.sh --first_seed 1 --last_seed 2 --n_parallel_seeds 2 $DEHBDQN_ARGS
