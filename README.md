@@ -35,6 +35,7 @@ GPU installation:
 python3 -m venv env_gpu
 source env_gpu/bin/activate
 pip install --upgrade pip setuptools wheel
+pip install swig
 pip install -e .
 pip install -U jax[cuda12]
 ```
