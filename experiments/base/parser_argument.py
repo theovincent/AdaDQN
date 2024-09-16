@@ -270,13 +270,6 @@ def add_searldqn_arguments(parser: argparse.ArgumentParser):
         type=int,
         default=400,
     )
-    parser.add_argument(
-        "-tp",
-        "--training_proportion",
-        help="Proportion of the number of sampling step that is used as training steps.",
-        type=float,
-        default=0.5,
-    )
 
 
 @output_added_arguments
