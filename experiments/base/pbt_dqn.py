@@ -21,14 +21,13 @@ def train(p: dict, agent: SEARLDQN, env, rb: ReplayBuffer):
     pbar = tqdm(total=p["n_epochs"] * p["n_training_steps_per_epoch"])
     while n_training_steps < p["n_epochs"] * p["n_training_steps_per_epoch"]:
         returns, n_steps = agent.evaluate(env, rb, p["horizon"], p["min_steps_evaluation"])
-        sum_n_steps = np.sum(n_steps)
+        sum_n_steps = int(np.sum(n_steps))
 
         episode_returns_per_evaluation.append(list(returns))
         n_steps_per_evaluation.append(list(n_steps))
-        n_training_steps += sum_n_steps
-        pbar.update(sum_n_steps)
 
-        for _ in range(int(sum_n_steps * p["training_proportion"])):
+        for _ in range(sum_n_steps):
+            n_training_steps += 1
             agent.update_online_params(n_training_steps, rb)
             losses = agent.losses
             target_updated = agent.update_target_params(n_training_steps)
@@ -38,6 +37,8 @@ def train(p: dict, agent: SEARLDQN, env, rb: ReplayBuffer):
                 for idx_hp in range(p["n_networks"]):
                     logs[f"hps/{idx_hp}_loss"] = losses[idx_hp]
                 p["wandb"].log(logs)
+
+        pbar.update(sum_n_steps)
 
         agent.exploit_and_explore(returns)
 
