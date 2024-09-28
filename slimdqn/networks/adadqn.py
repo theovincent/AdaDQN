@@ -118,7 +118,7 @@ class AdaDQN:
     @partial(jax.jit, static_argnames="self")
     def selected_idx_for_action(self, key, losses):
         key, choice_key = jax.random.split(key)
-        p = jnp.nan_to_num(jnp.nanmax(losses) / (losses + 1e-6))
+        p = jnp.nan_to_num(1 / (losses + 1e-6))
 
         selected_idx = jax.random.choice(choice_key, jnp.arange(self.n_networks), (), p=p / p.sum())
 

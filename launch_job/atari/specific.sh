@@ -6,31 +6,31 @@ SHARED_ARGS="--replay_buffer_capacity 1_000_000 --batch_size 32 --update_horizon
     --mlp_n_neurons_range 25 512 --learning_rate_range 6 3"
 
 # -------------- AdaDQN --------------
-for TARGET_UPDATE_FREQUENCY in 4000 8000
-do
-    for HP_UPDATE_FREQUENCY in 40000 80000 
-    do
-        for EXPLOITATION_TYPE in elitism # elitism truncation
-        do
-            for RESET_MODE in no_reset # reset no_reset
-            do
-                if [[ $RESET_MODE = "reset" ]]
-                then
-                    RESET_FLAG="--reset_weights"
-                else
-                    RESET_FLAG=""
-                fi
-                ADADQN_ARGS="--experiment_name long_tuf_${TARGET_UPDATE_FREQUENCY}_huf_${HP_UPDATE_FREQUENCY}_${EXPLOITATION_TYPE}_${RESET_MODE}_Pong \
-                    $SHARED_ARGS --target_update_freq $TARGET_UPDATE_FREQUENCY --n_epochs 40 --n_networks 5 \
-                    --exploitation_type $EXPLOITATION_TYPE --epsilon_end 0.01 --epsilon_duration 250_000 \
-                    --hp_update_frequency $HP_UPDATE_FREQUENCY $RESET_FLAG"
+# for TARGET_UPDATE_FREQUENCY in 4000 8000
+# do
+#     for HP_UPDATE_FREQUENCY in 40000 80000 
+#     do
+#         for EXPLOITATION_TYPE in elitism # elitism truncation
+#         do
+#             for RESET_MODE in no_reset # reset no_reset
+#             do
+#                 if [[ $RESET_MODE = "reset" ]]
+#                 then
+#                     RESET_FLAG="--reset_weights"
+#                 else
+#                     RESET_FLAG=""
+#                 fi
+#                 ADADQN_ARGS="--experiment_name long_tuf_${TARGET_UPDATE_FREQUENCY}_huf_${HP_UPDATE_FREQUENCY}_${EXPLOITATION_TYPE}_${RESET_MODE}_Pong \
+#                     $SHARED_ARGS --target_update_freq $TARGET_UPDATE_FREQUENCY --n_epochs 40 --n_networks 5 \
+#                     --exploitation_type $EXPLOITATION_TYPE --epsilon_end 0.01 --epsilon_duration 250_000 \
+#                     --hp_update_frequency $HP_UPDATE_FREQUENCY $RESET_FLAG"
 
-                launch_job/atari/cluster_adadqn.sh --first_seed 1 --last_seed 2 --n_parallel_seeds 2 $ADADQN_ARGS
-                launch_job/atari/cluster_adadqn.sh --first_seed 5 --last_seed 5 --n_parallel_seeds 1 $ADADQN_ARGS
-            done
-        done
-    done
-done
+#                 launch_job/atari/cluster_adadqn.sh --first_seed 1 --last_seed 2 --n_parallel_seeds 2 $ADADQN_ARGS
+#                 launch_job/atari/cluster_adadqn.sh --first_seed 5 --last_seed 5 --n_parallel_seeds 1 $ADADQN_ARGS
+#             done
+#         done
+#     done
+# done
 
 
 # -------------- SEARL --------------
@@ -61,10 +61,10 @@ done
 # done
 
 # -------------- RSDQN --------------
-# RSDQN_ARGS="--experiment_name hpupe_10_Pong $SHARED_ARGS --target_update_freq 8000 --n_epochs 100 \
-#     --epsilon_end 0.01 --epsilon_duration 250_000 --hp_update_per_epoch 10"
+RSDQN_ARGS="--experiment_name hpupe_30_RoadRunner $SHARED_ARGS --target_update_freq 8000 --n_epochs 180 \
+    --epsilon_end 0.01 --epsilon_duration 250_000 --hp_update_per_epoch 30"
 # launch_job/atari/local_rsdqn.sh --first_seed 1 --last_seed 2 $RSDQN_ARGS
-# launch_job/atari/local_rsdqn.sh --first_seed 3 --last_seed 5 $RSDQN_ARGS
+launch_job/atari/local_rsdqn.sh --first_seed 5 --last_seed 5 $RSDQN_ARGS
 # launch_job/atari/cluster_rsdqn.sh --first_seed 1 --last_seed 2 --n_parallel_seeds 2 $RSDQN_ARGS
 # launch_job/atari/cluster_rsdqn.sh --first_seed 5 --last_seed 5 --n_parallel_seeds 1 $RSDQN_ARGS
 
