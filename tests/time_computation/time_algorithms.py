@@ -35,7 +35,7 @@ def run_algorithm(algo_name, algo_args):
 if __name__ == "__main__":
     base_args = (
         "--seed 1 --disable_wandb --replay_buffer_capacity 1_000_000 --batch_size 32 --update_horizon 1 --gamma 0.99 "
-        + "--horizon 27_000 --target_update_freq 8000 --n_epochs 2 --n_training_steps_per_epoch 2 --update_to_data 4 "
+        + "--horizon 27_000 --target_update_freq 8000 --n_epochs 2 --n_training_steps_per_epoch 250_000 --update_to_data 4 "
         + "--n_initial_samples 20_000 --cnn_n_layers_range 1 3 --cnn_n_channels_range 16 64 --cnn_kernel_size_range 2 8 "
         + "--cnn_stride_range 2 5 --mlp_n_layers_range 0 2 --mlp_n_neurons_range 25 512 --learning_rate_range 6 3"
     )
