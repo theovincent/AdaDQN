@@ -1,13 +1,14 @@
-from typing import Dict
-import jax
-from flax.core import FrozenDict
 from functools import partial
+from typing import Dict
+
+import jax
 import jax.numpy as jnp
 import numpy as np
-from slimdqn.networks.hyperparameters.generators import HPGenerator
-from slimdqn.sample_collection.replay_buffer import ReplayBuffer
+from flax.core import FrozenDict
 
+from slimdqn.networks.hyperparameters.generators import HPGenerator
 from slimdqn.sample_collection import IDX_RB
+from slimdqn.sample_collection.replay_buffer import ReplayBuffer
 
 
 class AdaDQN:

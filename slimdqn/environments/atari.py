@@ -2,11 +2,12 @@
 The environment is inspired from https://github.com/google/dopamine/blob/master/dopamine/discrete_domains/atari_lib.py
 """
 
-from typing import Tuple, Dict
-import gymnasium as gym
-import numpy as np
-import jax.numpy as jnp
+from typing import Dict, Tuple
+
 import cv2
+import gymnasium as gym
+import jax.numpy as jnp
+import numpy as np
 
 
 class AtariEnv:

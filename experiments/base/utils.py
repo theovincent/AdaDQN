@@ -4,8 +4,8 @@ import os
 import pickle
 import time
 from typing import List
-import wandb
 
+import wandb
 from experiments import DISPLAY_NAME
 from experiments.base import parser_argument
 

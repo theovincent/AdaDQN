@@ -1,11 +1,11 @@
+import copy
 import unittest
+
 import jax
 import numpy as np
-import copy
-
-from slimdqn.networks.hyperparameters.generators import HPGenerator
 
 from slimdqn.networks import ACTIVATIONS, LOSSES, OPTIMIZERS
+from slimdqn.networks.hyperparameters.generators import HPGenerator
 
 
 class TestTransformations(unittest.TestCase):

@@ -1,10 +1,11 @@
 import unittest
-import numpy as np
+
 import jax
 import jax.numpy as jnp
+import numpy as np
 
-from slimdqn.networks.adadqn import AdaDQN
 from slimdqn.networks import ACTIVATIONS, LOSSES, OPTIMIZERS
+from slimdqn.networks.adadqn import AdaDQN
 
 
 class TestHPSpaceGPULimit(unittest.TestCase):

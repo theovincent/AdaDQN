@@ -7,10 +7,9 @@ import numpy as np
 from experiments.base.individual_dqn import train
 from experiments.base.utils import prepare_logs
 from slimdqn.environments.atari import AtariEnv
+from slimdqn.networks import ACTIVATIONS, LOSSES, OPTIMIZERS
 from slimdqn.networks.individual_dqn import RSDQN
 from slimdqn.sample_collection.replay_buffer import ReplayBuffer
-
-from slimdqn.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
 
 
 def run(argvs=sys.argv[1:]):

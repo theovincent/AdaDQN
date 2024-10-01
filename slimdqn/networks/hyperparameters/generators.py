@@ -1,12 +1,14 @@
-from typing import Dict
-from collections import Counter
 import copy
+from collections import Counter
+from typing import Dict
+
 import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
+from ConfigSpace import Configuration, ConfigurationSpace, Float, Integer
 from dehb import DEHB
-from ConfigSpace import ConfigurationSpace, Integer, Float, Configuration
+
 from slimdqn.networks.base_dqn import BaseDQN
 
 

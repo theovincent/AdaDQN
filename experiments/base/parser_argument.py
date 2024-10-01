@@ -2,7 +2,7 @@ import argparse
 from functools import wraps
 from typing import Callable, List
 
-from slimdqn.networks import ACTIVATIONS, OPTIMIZERS, LOSSES
+from slimdqn.networks import ACTIVATIONS, LOSSES, OPTIMIZERS
 
 
 def output_added_arguments(add_algo_arguments: Callable) -> Callable:

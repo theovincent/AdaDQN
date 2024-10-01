@@ -1,13 +1,14 @@
-from typing import Dict
-import jax
-from flax.core import FrozenDict
 from functools import partial
-from jax._src.random import PRNGKey as PRNGKey
-import jax.numpy as jnp
-from slimdqn.networks.hyperparameters.generators import HPGenerator
-from slimdqn.sample_collection.replay_buffer import ReplayBuffer
+from typing import Dict
 
+import jax
+import jax.numpy as jnp
+from flax.core import FrozenDict
+from jax._src.random import PRNGKey as PRNGKey
+
+from slimdqn.networks.hyperparameters.generators import HPGenerator
 from slimdqn.sample_collection import IDX_RB
+from slimdqn.sample_collection.replay_buffer import ReplayBuffer
 
 
 class IndividualDQN:

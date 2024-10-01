@@ -1,10 +1,11 @@
 from typing import Callable, List
-import optax
-import jax
-from flax.core import FrozenDict
-import jax.numpy as jnp
-from slimdqn.networks.architectures.dqn import DQNNet
 
+import jax
+import jax.numpy as jnp
+import optax
+from flax.core import FrozenDict
+
+from slimdqn.networks.architectures.dqn import DQNNet
 from slimdqn.sample_collection import IDX_RB
 
 

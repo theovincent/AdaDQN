@@ -6,6 +6,7 @@ import sys
 
 import gymnasium as gym
 import jax.numpy as jnp
+
 from slimdqn.environments.lunar_lander import LunarLander
 from slimdqn.networks.architectures.dqn import DQNNet
 

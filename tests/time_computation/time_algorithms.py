@@ -1,8 +1,9 @@
+import json
 import os
 import shutil
 import subprocess
-import json
 import time
+
 import numpy as np
 
 
