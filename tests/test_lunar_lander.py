@@ -40,7 +40,7 @@ class TestLunarLander(unittest.TestCase):
     def test_searldqn(self):
         self.run_core_test(
             "searldqn",
-            "--n_networks 5 --exploitation_type elitism --min_steps_evaluation 1 --training_proportion 0.8",
+            "--n_networks 5 --exploitation_type elitism --min_steps_evaluation 1",
         )
 
     def test_rsdqn(self):
